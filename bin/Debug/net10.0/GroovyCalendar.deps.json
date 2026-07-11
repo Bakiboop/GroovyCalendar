@@ -1,0 +1,41 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "GroovyCalendar/1.0.0": {
+        "dependencies": {
+          "AngleSharp": "1.5.2"
+        },
+        "runtime": {
+          "GroovyCalendar.dll": {}
+        }
+      },
+      "AngleSharp/1.5.2": {
+        "runtime": {
+          "lib/net10.0/AngleSharp.dll": {
+            "assemblyVersion": "1.5.2.0",
+            "fileVersion": "1.5.2.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "GroovyCalendar/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AngleSharp/1.5.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LVZ7rrr6GHbhERhTgVDarVygl1e6KwE96pronA90LBOMacDhxR4lB+xYLjn/vlnUu+xbOB2RM9fuCPEx5bdyWA==",
+      "path": "anglesharp/1.5.2",
+      "hashPath": "anglesharp.1.5.2.nupkg.sha512"
+    }
+  }
+}

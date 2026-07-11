@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "GkkBUKaCVeM=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Christian Culbida\\Documents\\GroovyCalendar\\GroovyCalendar.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Christian Culbida\\.nuget\\packages\\anglesharp\\1.5.2\\anglesharp.1.5.2.nupkg.sha512"
+  ],
+  "logs": []
+}
