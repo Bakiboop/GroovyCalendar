@@ -54,6 +54,10 @@
             "AngleSharp": {
               "target": "Package",
               "version": "[1.5.2, )"
+            },
+            "Microsoft.Playwright": {
+              "target": "Package",
+              "version": "[1.61.0, )"
             }
           },
           "imports": [

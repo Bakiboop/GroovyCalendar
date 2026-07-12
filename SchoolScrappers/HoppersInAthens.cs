@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 using AngleSharp;
 using GroovyCalendar.Interfaces;
 using GroovyCalendar.Models;
@@ -13,10 +9,6 @@ namespace GroovyCalendar.SchoolScrapers
     {
         public string SchoolName => "Hoppers in Athens";
         private readonly string _url = "https://hoppersinathens.com/en/events/";
-
-
-
-
 
         public async Task<List<SwingEvent>> ScrapeEventsAsync()
         {
@@ -40,7 +32,7 @@ namespace GroovyCalendar.SchoolScrapers
                 foreach (var eventblock in eventElements)
                 {
                     string imageUrl = "";
-                    var styleAttribute = eventblock.QuerySelector(".img_placeholder").GetAttribute("style");
+                    var styleAttribute = eventblock.QuerySelector(".img_placeholder")?.GetAttribute("style");
 
                     // Βεβαιωνόμαστε ότι το style δεν είναι null και περιέχει όντως το "url('"
                     if (!string.IsNullOrEmpty(styleAttribute) && styleAttribute.Contains("url('"))
@@ -56,9 +48,8 @@ namespace GroovyCalendar.SchoolScrapers
                         }
                     }
 
-                    var title = eventblock.QuerySelector(".event_title").TextContent.Trim();
-                    // skip if the title does not contain "Party"
-                    if (!title.Contains("Party", StringComparison.OrdinalIgnoreCase))
+                    var title = eventblock.QuerySelector(".event_title")?.TextContent.Trim();
+                    if (string.IsNullOrEmpty(title) || !title.Contains("Party", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
@@ -69,8 +60,8 @@ namespace GroovyCalendar.SchoolScrapers
                         eventType = "Balboa";
                     }
 
-                    var address = eventblock.QuerySelector(".event_address").TextContent.Trim();
-                    var url = eventblock.QuerySelector("a[rel='bookmark']").GetAttribute("href");
+                    var address = eventblock.QuerySelector(".event_address")?.TextContent.Trim();
+                    var url = eventblock.QuerySelector("a[rel='bookmark']")?.GetAttribute("href");
 
 
                     //Phase 2: Inside each url 
@@ -78,7 +69,7 @@ namespace GroovyCalendar.SchoolScrapers
                     var innerHtml = await client.GetStringAsync(url);
                     var innerDocument = await context.OpenAsync(req => req.Content(innerHtml));
 
-                    var description = innerDocument.QuerySelector(".entry-content").TextContent.Trim();
+                    var description = innerDocument.QuerySelector(".entry-content")?.TextContent.Trim();
 
                     var strongTags = innerDocument.QuerySelectorAll("strong");
                     string eventDate = "";
@@ -87,20 +78,20 @@ namespace GroovyCalendar.SchoolScrapers
                     {
                         if (strong.TextContent.Contains("Date:"))
                         {
-                            eventDate = strong.NextElementSibling.TextContent.Trim();
+                            eventDate = strong.NextElementSibling?.TextContent?.Trim() ?? string.Empty;
                         }
                         else if (strong.TextContent.Contains("Time:"))
                         {
-                            eventTime = strong.NextElementSibling?.TextContent.Trim();
+                            eventTime = strong.NextElementSibling?.TextContent?.Trim() ?? string.Empty;
                         }
                     }
 
                     var priceLines = new List<string>();
                     string dj = "";
-                    var lines = description.Split('\n');
+                    var lines = description?.Split('\n') ?? Array.Empty<string>();
                     foreach (var line in lines)
                     {
-                        if (line.Contains("€") || line.Contains("Είσοδος", StringComparison.OrdinalIgnoreCase))
+                        if (line.Contains('€') || line.Contains("Είσοδος", StringComparison.OrdinalIgnoreCase))
                         {
                             priceLines.Add(line.Trim());
                         }

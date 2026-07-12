@@ -15,7 +15,7 @@ namespace GroovyCalendar
 
             var scrapers = new List<ISchoolScraper>
             {
-                new HoppersInAthens(),
+                // new HoppersInAthens(),
                 new GrooveInAthens()
             };
 

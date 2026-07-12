@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 using AngleSharp;
 using GroovyCalendar.Interfaces;
 using GroovyCalendar.Models;
@@ -14,10 +10,6 @@ namespace GroovyCalendar.SchoolScrapers
         public string SchoolName => "Groove in Athens";
         private readonly string _url = "https://grooveinathens.gr/en/events/category/party/list/?eventDisplay=past";
 
-
-
-
-
         public async Task<List<SwingEvent>> ScrapeEventsAsync()
         {
             var eventsList = new List<SwingEvent>();
@@ -25,10 +17,22 @@ namespace GroovyCalendar.SchoolScrapers
 
             try
             {
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                using var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
 
-                string html = await client.GetStringAsync(_url);
+                await using var browser = await playwright.Chromium.LaunchAsync(new Microsoft.Playwright.BrowserTypeLaunchOptions
+                {
+                    Headless = true
+                });
+
+                // 3. Φτιάχνουμε ένα νέο tab και πάμε στο URL
+                var page = await browser.NewPageAsync();
+                await page.GotoAsync(_url);
+
+                // 4. Περιμένουμε λίγο για σιγουριά ώστε να τρέξουν τα JavaScripts του Groove in Athens
+                await page.WaitForLoadStateAsync(Microsoft.Playwright.LoadState.NetworkIdle);
+
+                // 5. Παίρνουμε το τελικό, καθαρό HTML!
+                string html = await page.ContentAsync();
 
                 // AngleSharp
                 var context = BrowsingContext.New(Configuration.Default);
@@ -39,26 +43,23 @@ namespace GroovyCalendar.SchoolScrapers
 
                 foreach (var eventblock in eventElements)
                 {
+                    // Πάντα βάζουμε ? πριν από TextContent ή GetAttribute για να γλυτώσουμε τα NullReference Exceptions!
                     var titleElement = eventblock.QuerySelector(".tribe-events-calendar-list__event-title a");
-                    var title = titleElement.TextContent.Trim();
-                    var url = titleElement.GetAttribute("href");
+                    var title = titleElement?.TextContent.Trim();
+                    var url = titleElement?.GetAttribute("href");
 
-                    var imageUrl = eventblock.QuerySelector(".tribe-events-calendar-list__event-featured-image").GetAttribute("src");
+                    var imageUrl = eventblock.QuerySelector(".tribe-events-calendar-list__event-featured-image")?.GetAttribute("src");
 
                     // Example: "July 5, 2025 @ 10:00 pm - July 6, 2025 @ 2:00 am"
-                    var dateTimeFull = eventblock.QuerySelector(".tribe-events-calendar-list__event-datetime").TextContent.Trim();
+                    var dateTimeFull = eventblock.QuerySelector(".tribe-events-calendar-list__event-datetime")?.TextContent.Trim();
 
-                    var address = eventblock.QuerySelector(".tribe-events-calendar-list__event-venue").TextContent.Trim();
-                    //address = System.Text.RegularExpressions.Regex.Replace(address, @"\s+", " ");
+                    var address = eventblock.QuerySelector(".tribe-events-calendar-list__event-venue")?.TextContent.Trim();
 
                     string eventType = "Swing"; // default
 
-                    //var address = eventblock.QuerySelector(".event_address").TextContent.Trim();
-                    //var url = eventblock.QuerySelector("a[rel='bookmark']").GetAttribute("href");
-
-                    var price = eventblock.QuerySelector(".tribe-events-c-small-cta__price").TextContent.Trim();
-
-
+                    var price = eventblock.QuerySelector(".tribe-events-c-small-cta__price")?.TextContent.Trim();
+                    if (string.IsNullOrWhiteSpace(price) || !price.Contains('€', StringComparison.OrdinalIgnoreCase))
+                        price = "";
 
                     eventsList.Add(new SwingEvent
                     {
@@ -67,7 +68,7 @@ namespace GroovyCalendar.SchoolScrapers
                         Location = address,
                         EventUrl = url,
                         Date = dateTimeFull,
-                        Time = "",
+                        Time = "", // Η ώρα είναι ήδη μέσα στο dateTimeFull σύμφωνα με το site τους
                         Price = price,
                         Description = "",
                         SchoolName = this.SchoolName,

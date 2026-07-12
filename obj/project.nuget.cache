@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "GkkBUKaCVeM=",
+  "dgSpecHash": "5gN8//l5E98=",
   "success": true,
   "projectFilePath": "C:\\Users\\Christian Culbida\\Documents\\GroovyCalendar\\GroovyCalendar.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Christian Culbida\\.nuget\\packages\\anglesharp\\1.5.2\\anglesharp.1.5.2.nupkg.sha512"
+    "C:\\Users\\Christian Culbida\\.nuget\\packages\\anglesharp\\1.5.2\\anglesharp.1.5.2.nupkg.sha512",
+    "C:\\Users\\Christian Culbida\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
+    "C:\\Users\\Christian Culbida\\.nuget\\packages\\microsoft.playwright\\1.61.0\\microsoft.playwright.1.61.0.nupkg.sha512",
+    "C:\\Users\\Christian Culbida\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512"
   ],
   "logs": []
 }
