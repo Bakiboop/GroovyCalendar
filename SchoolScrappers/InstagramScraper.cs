@@ -13,6 +13,7 @@ namespace GroovyCalendar.SchoolScrapers
 
             try
             {
+                //Playright setup
                 using var playwright = await Playwright.CreateAsync();
                 await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false, SlowMo = 200 });
                 var context = await browser.NewContextAsync(new BrowserNewContextOptions
@@ -20,18 +21,17 @@ namespace GroovyCalendar.SchoolScrapers
                     UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                     ViewportSize = new ViewportSize { Width = 1280, Height = 720 }
                 });
-
                 await context.AddInitScriptAsync(@"Object.defineProperty(navigator, 'webdriver', { get: () => undefined });");
 
+                //Login manually to instagram
                 var page = await context.NewPageAsync();
                 await page.GotoAsync("https://www.instagram.com/accounts/login/");
-
                 Console.WriteLine("\n*******************************************************");
                 Console.WriteLine(" 1. Press Enter when Logged in and Feed is visible.");
                 Console.WriteLine("*******************************************************\n");
-
                 await Task.Run(() => Console.ReadLine());
 
+                // Navigate to the profile page
                 await page.GotoAsync(profileUrl, new PageGotoOptions { WaitUntil = WaitUntilState.Load });
                 await page.WaitForTimeoutAsync(3000);
 
@@ -43,9 +43,9 @@ namespace GroovyCalendar.SchoolScrapers
                     await page.WaitForTimeoutAsync(3000);
                     postUrls = await GetPostLinksFromPage(page);
                 }
-
                 Console.WriteLine($"[LOG] Found {postUrls.Count} posts. Checking for parties...");
 
+                //
                 int maxPostsToCheck = Math.Min(10, postUrls.Count); // Ελέγχουμε 10 posts για να βρούμε τα πάρτι
                 for (int i = 0; i < maxPostsToCheck; i++)
                 {
@@ -54,12 +54,16 @@ namespace GroovyCalendar.SchoolScrapers
 
                     try
                     {
+                        //take caption from post
                         var captionElement = await page.QuerySelectorAsync("h1");
-                        string caption = captionElement != null ?
-                            await captionElement.InnerTextAsync() :
-                            await page.EvaluateAsync<string>("() => document.querySelector('meta[property=\"og:description\"]')?.content || ''");
+                        string caption = "";
 
-                        // ΕΔΩ ΕΙΝΑΙ ΤΟ ΦΙΛΤΡΟ ΜΑΣ:
+                        if (captionElement != null)
+                            caption = await captionElement.InnerTextAsync();
+                        else
+                            caption = await page.EvaluateAsync<string>("() => document.querySelector('meta[property=\"og:description\"]')?.content || ''"); //secret fallback to meta description
+
+                        // Filter Party posts based on keywords
                         if (IsPartyPost(caption))
                         {
                             Console.WriteLine($"[SUCCESS] Party post found! -> {postUrls[i]}");
@@ -84,7 +88,7 @@ namespace GroovyCalendar.SchoolScrapers
             return postCaptions;
         }
 
-        // Η λογική του φίλτρου: Ψάχνει συγκεκριμένες λέξεις
+        #region Helper Methods
         private bool IsPartyPost(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
@@ -110,5 +114,6 @@ namespace GroovyCalendar.SchoolScrapers
             }
             return validUrls;
         }
+        #endregion
     }
 }

@@ -1,12 +1,14 @@
+using System;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using GroovyCalendar.Models;
 
 namespace GroovyCalendar.SchoolScrapers
 {
     public class GeminiParser
     {
-        // Βάζουμε το κλειδί σου εδώ (προσωρινά)
         private readonly string _apiKey = "AQ.Ab8RN6LPF7WLdDGPazGoxjqzNyZ7y7vauqqUm7yDCGsDkp_ztg";
 
         public async Task<SwingEvent> ExtractEventInfoAsync(string caption)
@@ -14,18 +16,20 @@ namespace GroovyCalendar.SchoolScrapers
             Console.WriteLine("[AI] Sending text to Gemini for parsing...");
 
             using var client = new HttpClient();
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={_apiKey}";
-            // Εδώ δίνουμε τις οδηγίες (Prompt) στο AI!
+
+            // Πάμε με το 3.5 Flash που είδαμε ότι υπάρχει σίγουρα στη λίστα σου
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={_apiKey}";
+
             string prompt = @"
 You are an expert data extractor. I will give you a Greek Instagram post about a Swing Dance Party.
 Extract the following information and return it EXACTLY as a JSON object, with no markdown, no ```json tags, and no extra text. 
-Use these exact keys: Title, Type, Date, Time, Location, Price, Dj.
+Use these exact keys: Title, Type, Date, Time, Location, Price, Dj, SchoolName.
+For the 'SchoolName' key, always use the value 'Groove in Athens'.
 If you cannot find a piece of information, use 'N/A'.
 
 Post text:
 " + caption;
 
-            // Φτιάχνουμε το JSON που περιμένει το Gemini
             var requestBody = new
             {
                 contents = new[]
@@ -44,11 +48,12 @@ Post text:
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"[AI ERROR] {responseString}");
+                    // Προσθέσαμε τον κωδικό κατάστασης (π.χ. 400, 403, 500) για να ξέρουμε τι φταίει
+                    Console.WriteLine($"[AI ERROR] Status Code: {(int)response.StatusCode} ({response.StatusCode})");
+                    Console.WriteLine($"[AI ERROR] Response: {responseString}");
                     return null;
                 }
 
-                // Διαβάζουμε την απάντηση (το JSON που μας έστειλε το AI)
                 using var doc = JsonDocument.Parse(responseString);
                 var aiTextResponse = doc.RootElement
                     .GetProperty("candidates")[0]
@@ -56,10 +61,8 @@ Post text:
                     .GetProperty("parts")[0]
                     .GetProperty("text").GetString();
 
-                // Καθαρίζουμε τυχόν σκουπίδια (όπως ```json)
                 aiTextResponse = aiTextResponse.Replace("```json", "").Replace("```", "").Trim();
 
-                // Μετατρέπουμε το JSON κατευθείαν στο δικό σου αντικείμενο SwingEvent!
                 var swingEvent = JsonSerializer.Deserialize<SwingEvent>(aiTextResponse);
                 return swingEvent;
             }
