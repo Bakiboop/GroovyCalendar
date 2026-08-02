@@ -1,6 +1,7 @@
 using AngleSharp;
 using GroovyCalendar.Interfaces;
 using GroovyCalendar.Models;
+using Microsoft.Playwright;
 
 namespace GroovyCalendar.SchoolScrapers
 {

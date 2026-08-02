@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using GroovyCalendar.Interfaces;
-using GroovyCalendar.Models;
-using GroovyCalendar.SchoolScrapers; // Notice we import the namespace where our scraper lives
+﻿using GroovyCalendar.Models;
+using GroovyCalendar.SchoolScrapers;
 
 namespace GroovyCalendar
 {
@@ -11,27 +7,33 @@ namespace GroovyCalendar
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Starting GroovyCalendar Scraper...\n");
+            Console.WriteLine("Starting GroovyCalendar Instagram Test...\n");
 
-            var scrapers = new List<ISchoolScraper>
-            {
-                // new HoppersInAthens(),
-                new GrooveInAthens()
-            };
-
+            var instaScraper = new InstagramScraper();
+            var aiParser = new GeminiParser();
             var allEvents = new List<SwingEvent>();
 
-            foreach (var scraper in scrapers)
+            // Τρέχουμε τον Scraper
+            var partyCaptions = await instaScraper.ScrapeLatestPostsAsync("groove_inathens");
+
+            Console.WriteLine($"\n=== FOUND {partyCaptions.Count} PARTY POSTS. SENDING TO AI... ===");
+
+            foreach (var caption in partyCaptions)
             {
-                var schoolEvents = await scraper.ScrapeEventsAsync();
-                allEvents.AddRange(schoolEvents);
+                // Στέλνουμε το καθαρισμένο κείμενο στο Gemini
+                var parsedEvent = await aiParser.ExtractEventInfoAsync(caption);
+
+                if (parsedEvent != null)
+                {
+                    allEvents.Add(parsedEvent);
+                }
             }
 
             Console.WriteLine("\n=== FINAL CALENDAR ===");
 
             if (allEvents.Count == 0)
             {
-                Console.WriteLine("No parties found today.");
+                Console.WriteLine("No parties parsed successfully.");
             }
             else
             {
@@ -44,8 +46,6 @@ namespace GroovyCalendar
                     Console.WriteLine($"LOCATION: {ev.Location}");
                     Console.WriteLine($"PRICE:    {ev.Price}");
                     Console.WriteLine($"DJ:       {ev.Dj}");
-                    Console.WriteLine($"URL:      {ev.EventUrl}");
-                    Console.WriteLine($"IMAGE:    {ev.ImageUrl}");
                 }
             }
 
