@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using System.IO;
 
 namespace GroovyCalendar.SchoolScrapers
 {
@@ -7,6 +8,7 @@ namespace GroovyCalendar.SchoolScrapers
         public async Task<List<string>> ScrapeLatestPostsAsync(string username)
         {
             var postCaptions = new List<string>();
+            string authFile = "auth.json";
             string profileUrl = $"https://www.instagram.com/{username}/";
 
             Console.WriteLine($"\n[LOG] Starting scraper for @{username}");
@@ -16,20 +18,36 @@ namespace GroovyCalendar.SchoolScrapers
                 //Playright setup
                 using var playwright = await Playwright.CreateAsync();
                 await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false, SlowMo = 200 });
-                var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                var contextOptions = new BrowserNewContextOptions
                 {
                     UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                     ViewportSize = new ViewportSize { Width = 1280, Height = 720 }
-                });
+                };
+
+                if (File.Exists(authFile))
+                {
+                    Console.WriteLine("[LOG] Found auth.json! Using saved session...");
+                    contextOptions.StorageStatePath = authFile;
+                }
+
+                var context = await browser.NewContextAsync(contextOptions);
                 await context.AddInitScriptAsync(@"Object.defineProperty(navigator, 'webdriver', { get: () => undefined });");
+
 
                 //Login manually to instagram
                 var page = await context.NewPageAsync();
-                await page.GotoAsync("https://www.instagram.com/accounts/login/");
-                Console.WriteLine("\n*******************************************************");
-                Console.WriteLine(" 1. Press Enter when Logged in and Feed is visible.");
-                Console.WriteLine("*******************************************************\n");
-                await Task.Run(() => Console.ReadLine());
+                if (!File.Exists(authFile))
+                {
+                    Console.WriteLine("[LOG] No saved session found. Navigating to login...");
+                    await page.GotoAsync("https://www.instagram.com/accounts/login/");
+                    Console.WriteLine("\n*******************************************************");
+                    Console.WriteLine(" 1. Press Enter when Logged in and Feed is visible.");
+                    Console.WriteLine("*******************************************************\n");
+                    await Task.Run(() => Console.ReadLine());
+
+                    Console.WriteLine("[LOG] Saving session to auth.json...");
+                    await context.StorageStateAsync(new BrowserContextStorageStateOptions { Path = authFile });
+                }
 
                 // Navigate to the profile page
                 await page.GotoAsync(profileUrl, new PageGotoOptions { WaitUntil = WaitUntilState.Load });
