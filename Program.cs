@@ -1,5 +1,6 @@
 ﻿using GroovyCalendar.Models;
 using GroovyCalendar.SchoolScrapers;
+using System.Text.Json;
 
 namespace GroovyCalendar
 {
@@ -11,24 +12,39 @@ namespace GroovyCalendar
 
             var instaScraper = new InstagramScraper();
             var aiParser = new GeminiParser();
-            var allEvents = new List<SwingEvent>();
 
-            // Τρέχουμε τον Scraper
-            var partyCaptions = await instaScraper.ScrapeLatestPostsAsync("groove_inathens");
-
-            Console.WriteLine($"\n=== FOUND {partyCaptions.Count} PARTY POSTS. SENDING TO AI... ===");
-
-            foreach (var caption in partyCaptions)
+            var profilesToScrape = new List<string>
             {
-                // Στέλνουμε το καθαρισμένο κείμενο στο Gemini
-                var parsedEvent = await aiParser.ExtractEventInfoAsync(caption);
+                "groove_inathens",
+                "athenslindyhop",
+                "swing_that_thing_athens",
+                "jumpnjive.gr",
+                "athensbalboa",
+                "jazz_reactor",
+                "hoppers_in_athens",
+                "bluefox_athens",
+                "stompingr",
+                "rollinfoxes",
+                "athens_boogie"
+                // Πρόσθεσε όσα θες εδώ, απλά βάζοντας το username!
+            };
 
-                if (parsedEvent != null)
+            var allScrapedPosts = new List<(string PostUrl, string Caption, string ImageUrl, string Username)>();
+
+            foreach (var instaHandle in profilesToScrape)
+            {
+                Console.WriteLine($"\n🔍 SCANNING PROFILE: @{instaHandle}");
+                var scrapedPosts = await instaScraper.ScrapeLatestPostsAsync(instaHandle);
+
+                foreach (var post in scrapedPosts)
                 {
-                    allEvents.Add(parsedEvent);
+                    allScrapedPosts.Add((post.PostUrl, post.Caption, post.ImageUrl, instaHandle));
                 }
             }
+            Console.WriteLine($"\n=== FINISHED SCRAPING. FOUND {allScrapedPosts.Count} TOTAL PARTY POSTS. SENDING TO AI... ===");
 
+            var allEvents = await aiParser.ExtractAllEventsAsync(allScrapedPosts);
+            // Τρέχουμε τον Scraper
             Console.WriteLine("\n=== FINAL CALENDAR ===");
 
             if (allEvents.Count == 0)
@@ -47,7 +63,40 @@ namespace GroovyCalendar
                     Console.WriteLine($"PRICE:    {ev.Price}");
                     Console.WriteLine($"DJ:       {ev.Dj}");
                 }
-            }
+
+                string reactPublicPath = @"C:\Users\Christian Culbida\Documents\GroovyCalendar\frontend\public\events.json";
+
+                try
+                {
+                    // 1. Ομαδοποιούμε τα events που είναι διπλότυπα (με βάση την Ημερομηνία και τον Τίτλο τους)
+                    var uniqueEvents = allEvents
+                        .GroupBy(e => new { e.Date, Title = e.Title.Trim().ToLower() })
+                        .Select(group =>
+                        {
+                            // Παίρνουμε το πρώτο σαν βάση
+                            var mergedEvent = group.First();
+
+                            // Μαζεύουμε όλα τα διαφορετικά SchoolNames από τα collab posts
+                            var schools = group.Select(e => e.SchoolName).Distinct().ToList();
+
+                            // Τα ενώνουμε με " & " (π.χ. "Groove in Athens & Stomping Ground")
+                            mergedEvent.SchoolName = string.Join(" & ", schools);
+
+                            return mergedEvent;
+                        })
+                        .ToList();
+
+                    var options = new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+                    string jsonString = JsonSerializer.Serialize(uniqueEvents, options);
+                    File.WriteAllText(reactPublicPath, jsonString);
+
+                    Console.WriteLine($"\n[SUCCESS] Saved {uniqueEvents.Count} unique events (after merging collabs) to: {reactPublicPath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"\n[ERROR] Could not save JSON file: {ex.Message}");
+                }
+            } // <--- Κλείνει το else
 
             Console.WriteLine("--------------------------------------------------");
             Console.WriteLine("\nScraping finished!");

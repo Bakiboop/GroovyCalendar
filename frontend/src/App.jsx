@@ -1,39 +1,25 @@
-import React, { useState } from 'react';
-
-// Αυτή είναι η δομή δεδομένων. 
-// Μπορείς να αντικαταστήσεις το περιεχόμενο αυτού του πίνακα 
-// με το περιεχόμενο του events.json αρχείου σου!
-const eventsData = [
-  {
-    "Title": "Groovy nights | Summer Closing Party with Shows",
-    "Type": "Swing",
-    "Date": "2026-06-20",
-    "Time": "21:00",
-    "Location": "Salaminos 7, Aigaleo, Athens",
-    "Price": "10€",
-    "EventUrl": "#",
-    "ImageUrl": "https://images.unsplash.com/photo-1541532735798-05180cf0656a?q=80&w=600&auto=format&fit=crop",
-    "SchoolName": "Groove in Athens"
-  },
-  {
-    "Title": "The Grand Opening Party",
-    "Type": "Swing",
-    "Date": "2026-09-13",
-    "Time": "21:00",
-    "Location": "Athens Lindy Hop Hub",
-    "Price": "Free",
-    "EventUrl": "#",
-    "ImageUrl": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600&auto=format&fit=crop",
-    "SchoolName": "Athens Lindy Hop"
-  }
-];
+import React, { useState, useEffect } from 'react'; // Προσθέσαμε το useEffect
 
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
 export default function App() {
+  // 1. Νέο State για τα events (ξεκινάει άδειο)
+  const [eventsData, setEventsData] = useState([]);
+
   const [currentDate, setCurrentDate] = useState(new Date(2026, 5, 1));
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // 2. Το useEffect τραβάει το JSON μόλις ανοίξει η σελίδα
+  useEffect(() => {
+    fetch('/events.json')
+      .then((response) => response.json())
+      .then((data) => {
+        setEventsData(data);
+        console.log("Events loaded successfully!", data);
+      })
+      .catch((error) => console.error("Error fetching events:", error));
+  }, []);
 
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
@@ -53,6 +39,8 @@ export default function App() {
     }
     for (let i = 1; i <= daysInMonth; i++) {
       const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
+      // Το eventsData τώρα είναι δυναμικό!
       const dayEvents = eventsData.filter(e => e.Date === dateString);
 
       days.push(
@@ -60,13 +48,15 @@ export default function App() {
           <span className="text-sm font-bold text-gray-700">{i}</span>
           <div className="flex flex-col gap-1 mt-1">
             {dayEvents.map((event, idx) => (
-              <button
+              <div
                 key={idx}
                 onClick={() => setSelectedEvent(event)}
-                className="bg-orange-500 text-white text-[10px] p-1 rounded hover:bg-orange-600 truncate"
+                className="bg-orange-500 text-white p-1 md:p-1.5 rounded cursor-pointer hover:bg-orange-600 transition-colors shadow-sm mb-1"
               >
-                {event.Title}
-              </button>
+                <div className="text-[10px] md:text-xs font-bold truncate">{event.Title}</div>
+                {/* Εδώ βάλαμε το όνομα της σχολής κάτω από τον τίτλο */}
+                <div className="text-[9px] opacity-90 truncate">{event.SchoolName}</div>
+              </div>
             ))}
           </div>
         </div>
@@ -101,11 +91,57 @@ export default function App() {
 
           {selectedEvent && (
             <div className="lg:w-80 bg-white p-6 rounded-2xl shadow-lg h-fit sticky top-8">
-              <img src={selectedEvent.ImageUrl} alt={selectedEvent.Title} className="w-full h-40 object-cover rounded-xl mb-4" />
-              <h3 className="font-bold text-lg mb-2">{selectedEvent.Title}</h3>
-              <p className="text-sm text-gray-600 mb-2">{selectedEvent.Date} | {selectedEvent.Time}</p>
-              <p className="text-sm text-orange-600 font-bold mb-4">{selectedEvent.Price}</p>
-              <button onClick={() => setSelectedEvent(null)} className="w-full py-2 bg-gray-800 text-white rounded-lg">Close</button>
+
+              {/* --- ΝΕΟ: Το Όνομα της Σχολής Πάνω Πάνω! --- */}
+              <div className="flex items-center gap-2 mb-4 text-orange-600 border-b border-gray-100 pb-3">
+                <span className="text-xl">🏫</span>
+                <span className="font-extrabold uppercase tracking-wider text-sm">
+                  {selectedEvent.SchoolName}
+                </span>
+              </div>
+              {/* ------------------------------------------ */}
+
+              {/* ------------------------------------------ */}
+
+              {/* --- SMART THUMBNAIL LAYOUT --- */}
+              <div className="w-full max-h-[320px] mb-4 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center p-1">
+                <img
+                  src={selectedEvent.ImageUrl}
+                  alt={selectedEvent.Title}
+                  className="max-w-full max-h-[310px] object-contain rounded-lg"
+                />
+              </div>
+
+              <h3 className="font-bold text-lg mb-2 text-gray-900 leading-tight">{selectedEvent.Title}</h3>
+              <div className="flex flex-col gap-1.5 mt-4">
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <span>📅</span> {selectedEvent.Date} | {selectedEvent.Time}
+                </p>
+                <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <span>📍</span> {selectedEvent.Location}
+                </p>
+                <p className="text-sm text-orange-600 font-bold flex items-center gap-2 mt-1">
+                  <span>🎟️</span> {selectedEvent.Price}
+                </p>
+              </div>
+
+              {/* Τα δύο κουμπιά */}
+              <div className="flex gap-2 mt-6">
+                <a
+                  href={selectedEvent.EventUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm shadow-sm"
+                >
+                  Event Link
+                </a>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           )}
         </div>

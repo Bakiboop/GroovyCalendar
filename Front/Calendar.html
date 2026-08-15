@@ -1,199 +1,215 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="en">
 
-// Αυτά τα δεδομένα θα έρχονται μελλοντικά από τη Βάση Δεδομένων (όπου τα έσωσε ο C# Scraper μας!)
-const mockEvents = [
-  {
-    id: 1,
-    title: "Summer Closing Party",
-    date: "2025-07-05",
-    time: "21:30",
-    location: "Tango Fix, Δηλιάδος 4, Κουκάκι",
-    price: "10 ευρώ",
-    school: "Athens Lindy Hop",
-    imageUrl: "https://placehold.co/600x400/2c3e50/ffffff?text=Summer+Closing+Party",
-    type: "Swing"
-  },
-  {
-    id: 2,
-    title: "Groovy Nights | Summer Edition",
-    date: "2025-06-20",
-    time: "21:00",
-    location: "Groove in Athens Hub, Σαλαμίνος 7",
-    price: "5€",
-    school: "Groove in Athens",
-    imageUrl: "https://placehold.co/600x400/e74c3c/ffffff?text=Groovy+Nights",
-    type: "Swing"
-  },
-  {
-    id: 3,
-    title: "Balboa Practice Night",
-    date: "2025-06-25",
-    time: "20:00",
-    location: "Αγησιλάου 77Α, Κεραμεικός",
-    price: "Δωρεάν",
-    school: "Hoppers in Athens",
-    imageUrl: "https://placehold.co/600x400/27ae60/ffffff?text=Balboa+Night",
-    type: "Balboa"
-  }
-];
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groovy Calendar</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
 
-// Helper functions για το Ημερολόγιο
-const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
-const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
+<body>
+  <div id="root"></div>
 
-export default function GroovyCalendarApp() {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 5, 1)); // Ξεκινάμε τον Ιούνιο 2025 για το demo
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  <script type="text/babel">
+    const { useState } = React;
 
-  const currentMonth = currentDate.getMonth() + 1;
-  const currentYear = currentDate.getFullYear();
-  const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-  const firstDay = getFirstDayOfMonth(currentMonth, currentYear); // 0 (Sun) to 6 (Sat)
-  const startDayPadding = firstDay === 0 ? 6 : firstDay - 1; // Κάνουμε τη Δευτέρα πρώτη μέρα
+    // Αυτά τα δεδομένα θα έρχονται μελλοντικά από τη Βάση Δεδομένων (όπου τα έσωσε ο C# Scraper μας!)
+    const mockEvents = [
+      {
+        id: 1,
+        title: "Summer Closing Party",
+        date: "2025-07-05",
+        time: "21:30",
+        location: "Tango Fix, Δηλιάδος 4, Κουκάκι",
+        price: "10 ευρώ",
+        school: "Athens Lindy Hop",
+        imageUrl: "https://placehold.co/600x400/2c3e50/ffffff?text=Summer+Closing+Party",
+        type: "Swing"
+      },
+      {
+        id: 2,
+        title: "Groovy Nights | Summer Edition",
+        date: "2025-06-20",
+        time: "21:00",
+        location: "Groove in Athens Hub, Σαλαμίνος 7",
+        price: "5€",
+        school: "Groove in Athens",
+        imageUrl: "https://placehold.co/600x400/e74c3c/ffffff?text=Groovy+Nights",
+        type: "Swing"
+      },
+      {
+        id: 3,
+        title: "Balboa Practice Night",
+        date: "2025-06-25",
+        time: "20:00",
+        location: "Αγησιλάου 77Α, Κεραμεικός",
+        price: "Δωρεάν",
+        school: "Hoppers in Athens",
+        imageUrl: "https://placehold.co/600x400/27ae60/ffffff?text=Balboa+Night",
+        type: "Balboa"
+      }
+    ];
 
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    // Helper functions για το Ημερολόγιο
+    const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
+    const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
-  const nextMonth = () => setCurrentDate(new Date(currentYear, currentMonth, 1));
-  const prevMonth = () => setCurrentDate(new Date(currentYear, currentMonth - 2, 1));
+    function GroovyCalendarApp() {
+      const [currentDate, setCurrentDate] = useState(new Date(2025, 5, 1)); // Ξεκινάμε τον Ιούνιο 2025 για το demo
+      const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Δημιουργούμε τα "κουτάκια" του ημερολογίου
-  const renderCalendarDays = () => {
-    const days = [];
-    
-    // Κενά κουτάκια για τις μέρες πριν ξεκινήσει ο μήνας
-    for (let i = 0; i < startDayPadding; i++) {
-      days.push(<div key={`empty-${i}`} className="p-2 border border-gray-200 bg-gray-50/50 min-h-[100px] md:min-h-[120px]"></div>);
-    }
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+      const firstDay = getFirstDayOfMonth(currentMonth, currentYear); // 0 (Sun) to 6 (Sat)
+      const startDayPadding = firstDay === 0 ? 6 : firstDay - 1; // Κάνουμε τη Δευτέρα πρώτη μέρα
 
-    // Οι μέρες του μήνα
-    for (let i = 1; i <= daysInMonth; i++) {
-      // Φτιάχνουμε το string της ημερομηνίας σε μορφή YYYY-MM-DD
-      const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      
-      // Ψάχνουμε αν υπάρχει event αυτή τη μέρα
-      const dayEvents = mockEvents.filter(e => e.date === dateString);
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-      days.push(
-        <div key={i} className="p-1 md:p-2 border border-gray-200 hover:bg-orange-50 transition-colors min-h-[100px] md:min-h-[120px] flex flex-col relative group">
-          <span className="text-sm font-semibold text-gray-700 mb-1">{i}</span>
-          
-          {/* Αν υπάρχουν events, δείξε τα! */}
-          <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
-            {dayEvents.map(event => (
-              <div 
-                key={event.id}
-                onClick={() => setSelectedEvent(event)}
-                className="bg-orange-500 text-white text-xs p-1 md:p-1.5 rounded cursor-pointer hover:bg-orange-600 transition-colors shadow-sm"
-              >
-                <div className="font-bold truncate">{event.title}</div>
-                <div className="text-[10px] opacity-90 hidden md:block">{event.time} | {event.school}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return days;
-  };
+      const nextMonth = () => setCurrentDate(new Date(currentYear, currentMonth, 1));
+      const prevMonth = () => setCurrentDate(new Date(currentYear, currentMonth - 2, 1));
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-              Groovy<span className="text-orange-500">Calendar</span>
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">All Athens Swing Parties in one place.</p>
-          </div>
-          
-          {/* Controls Μήνα */}
-          <div className="flex items-center gap-6">
-            <button onClick={prevMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
-            </button>
-            <div className="w-48 text-center">
-              <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest">{monthNames[currentMonth - 1]}</h2>
-              <p className="text-gray-500 text-sm">{currentYear}</p>
-            </div>
-            <button onClick={nextMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-            </button>
-          </div>
-        </header>
+      // Δημιουργούμε τα "κουτάκια" του ημερολογίου
+      const renderCalendarDays = () => {
+        const days = [];
 
-        {/* Layout: Ημερολόγιο & Sidebar */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Main Calendar Grid */}
-          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Μέρες Εβδομάδας */}
-            <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  {day}
-                </div>
-              ))}
-            </div>
-            {/* Κουτάκια Ημερών */}
-            <div className="grid grid-cols-7 bg-white">
-              {renderCalendarDays()}
-            </div>
-          </div>
+        // Κενά κουτάκια για τις μέρες πριν ξεκινήσει ο μήνας
+        for (let i = 0; i < startDayPadding; i++) {
+          days.push(<div key={`empty-${i}`} className="p-2 border border-gray-200 bg-gray-50/50 min-h-[100px] md:min-h-[120px]"></div>);
+        }
 
-          {/* Sidebar / Modal για Λεπτομέρειες Event */}
-          {selectedEvent ? (
-             <div className="lg:w-96 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col sticky top-8 h-fit animate-fade-in-up">
-               <div className="relative h-48 bg-gray-200">
-                 <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="w-full h-full object-cover" />
-                 <button 
-                    onClick={() => setSelectedEvent(null)}
-                    className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+        // Οι μέρες του μήνα
+        for (let i = 1; i <= daysInMonth; i++) {
+          // Φτιάχνουμε το string της ημερομηνίας σε μορφή YYYY-MM-DD
+          const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
+          // Ψάχνουμε αν υπάρχει event αυτή τη μέρα
+          const dayEvents = mockEvents.filter(e => e.date === dateString);
+
+          days.push(
+            <div key={i} className="p-1 md:p-2 border border-gray-200 hover:bg-orange-50 transition-colors min-h-[100px] md:min-h-[120px] flex flex-col relative group">
+              <span className="text-sm font-semibold text-gray-700 mb-1">{i}</span>
+
+              {/* Αν υπάρχουν events, δείξε τα! */}
+              <div className="flex flex-col gap-1 flex-1 overflow-y-auto">
+                {dayEvents.map(event => (
+                  <div
+                    key={event.id}
+                    onClick={() => setSelectedEvent(event)}
+                    className="bg-orange-500 text-white text-xs p-1 md:p-1.5 rounded cursor-pointer hover:bg-orange-600 transition-colors shadow-sm"
                   >
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                 </button>
-                 <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    {selectedEvent.type}
-                 </div>
-               </div>
-               
-               <div className="p-6 flex flex-col gap-4">
-                 <h3 className="text-xl font-bold text-gray-900 leading-tight">{selectedEvent.title}</h3>
-                 
-                 <div className="flex items-center gap-3 text-gray-600">
-                   <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                   <span className="text-sm">{selectedEvent.date} @ {selectedEvent.time}</span>
-                 </div>
-                 
-                 <div className="flex items-start gap-3 text-gray-600">
-                   <svg className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                   <span className="text-sm leading-snug">{selectedEvent.location}</span>
-                 </div>
-
-                 <div className="flex items-center gap-3 text-gray-600">
-                   <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-                   <span className="text-sm font-semibold">{selectedEvent.price}</span>
-                 </div>
-
-                 <div className="flex items-center gap-3 text-gray-600 mt-2 p-3 bg-orange-50 rounded-xl">
-                   <span className="text-xl">🏫</span>
-                   <span className="text-sm font-medium text-orange-800">Organized by: {selectedEvent.school}</span>
-                 </div>
-               </div>
-             </div>
-          ) : (
-            <div className="lg:w-96 bg-gray-100/50 rounded-2xl border border-dashed border-gray-300 flex flex-col items-center justify-center p-8 text-center text-gray-500">
-              <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-              <p>Click on any event in the calendar to see the full details, flyers, and pricing!</p>
+                    <div className="font-bold truncate">{event.title}</div>
+                    <div className="text-[10px] opacity-90 hidden md:block">{event.time} | {event.school}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
+          );
+        }
+        return days;
+      };
 
-      </div>
+      return (
+        <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-4 md:p-8">
+          <div className="max-w-6xl mx-auto">
 
-      <style jsx>{`
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <div>
+                <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                  Groovy<span className="text-orange-500">Calendar</span>
+                </h1>
+                <p className="text-gray-500 text-sm mt-1">All Athens Swing Parties in one place.</p>
+              </div>
+
+              {/* Controls Μήνα */}
+              <div className="flex items-center gap-6">
+                <button onClick={prevMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div className="w-48 text-center">
+                  <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest">{monthNames[currentMonth - 1]}</h2>
+                  <p className="text-gray-500 text-sm">{currentYear}</p>
+                </div>
+                <button onClick={nextMonth} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+              </div>
+            </header>
+
+            {/* Layout: Ημερολόγιο & Sidebar */}
+            <div className="flex flex-col lg:flex-row gap-8">
+
+              {/* Main Calendar Grid */}
+              <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Μέρες Εβδομάδας */}
+                <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                {/* Κουτάκια Ημερών */}
+                <div className="grid grid-cols-7 bg-white">
+                  {renderCalendarDays()}
+                </div>
+              </div>
+
+              {/* Sidebar / Modal για Λεπτομέρειες Event */}
+              {selectedEvent ? (
+                <div className="lg:w-96 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col sticky top-8 h-fit animate-fade-in-up">
+                  <div className="relative h-48 bg-gray-200">
+                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setSelectedEvent(null)}
+                      className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      {selectedEvent.type}
+                    </div>
+                  </div>
+
+                  <div className="p-6 flex flex-col gap-4">
+                    <h3 className="text-xl font-bold text-gray-900 leading-tight">{selectedEvent.title}</h3>
+
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      <span className="text-sm">{selectedEvent.date} @ {selectedEvent.time}</span>
+                    </div>
+
+                    <div className="flex items-start gap-3 text-gray-600">
+                      <svg className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      <span className="text-sm leading-snug">{selectedEvent.location}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                      <span className="text-sm font-semibold">{selectedEvent.price}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-gray-600 mt-2 p-3 bg-orange-50 rounded-xl">
+                      <span className="text-xl">🏫</span>
+                      <span className="text-sm font-medium text-orange-800">Organized by: {selectedEvent.school}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="lg:w-96 bg-gray-100/50 rounded-2xl border border-dashed border-gray-300 flex flex-col items-center justify-center p-8 text-center text-gray-500">
+                  <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  <p>Click on any event in the calendar to see the full details, flyers, and pricing!</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          <style jsx>{`
         .animate-fade-in-up {
           animation: fadeInUp 0.3s ease-out forwards;
         }
@@ -208,6 +224,6 @@ export default function GroovyCalendarApp() {
           }
         }
       `}</style>
-    </div>
-  );
-}
+        </div>
+      );
+    }

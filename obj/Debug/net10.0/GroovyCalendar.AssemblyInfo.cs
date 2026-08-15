@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GroovyCalendar")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b989ca21f92a5988994dc387491254b1f8101796")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ba278402e7b95039dbc87081e2f741709e722fea")]
 [assembly: System.Reflection.AssemblyProductAttribute("GroovyCalendar")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GroovyCalendar")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
