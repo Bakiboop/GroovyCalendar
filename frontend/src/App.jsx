@@ -71,17 +71,18 @@ export default function App() {
         <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm">
           <h1 className="text-3xl font-extrabold text-gray-900">Groovy<span className="text-orange-500">Calendar</span></h1>
           <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Prev</button>
-            <h2 className="text-xl font-bold w-32 text-center">{monthNames[currentMonth - 1]} {currentYear}</h2>
-            <button onClick={nextMonth} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Next</button>
+            {/* Βάλαμε text-gray-900 στα κουμπιά και στον μήνα για να μη χάνονται στο Dark Mode */}
+            <button onClick={prevMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Prev</button>
+            <h2 className="text-xl font-bold w-32 text-center text-gray-900">{monthNames[currentMonth - 1]} {currentYear}</h2>
+            <button onClick={nextMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Next</button>
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col-reverse lg:flex-row gap-8">
           {/* Αλλάξαμε το overflow-hidden σε overflow-x-auto */}
           <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
             {/* Βάλαμε ένα div με min-w-[700px] για να μην στριμώχνονται οι μέρες στα κινητά */}
-            <div className="min-w-[500px] lg:min-w-full">
+            <div className="min-w-[7500px] lg:min-w-full">
               <div className="grid grid-cols-7 bg-gray-100 border-b">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                   <div key={day} className="py-2 text-center text-xs font-bold text-gray-500 uppercase">{day}</div>
@@ -94,7 +95,7 @@ export default function App() {
           </div>
 
           {selectedEvent && (
-            <div className="lg:w-80 bg-white p-6 rounded-2xl shadow-lg h-fit sticky top-8">
+            <div className="lg:w-80 bg-white p-6 rounded-2xl shadow-lg h-fit lg:sticky lg:top-8">
 
               {/* --- ΝΕΟ: Το Όνομα της Σχολής Πάνω Πάνω! --- */}
               <div className="flex items-center gap-2 mb-4 text-orange-600 border-b border-gray-100 pb-3">
