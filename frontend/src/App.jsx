@@ -66,26 +66,29 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 font-sans">
+    // 1. ΑΛΛΑΓΗ: Αλλάξαμε το p-8 σε p-2 md:p-8. Έτσι στο κινητό κερδίζουμε πάρα πολύ χώρο δεξιά-αριστερά!
+    <div className="min-h-screen bg-gray-100 p-2 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm">
-          {/* Βάλαμε !text-gray-900 για να επιβάλουμε το σκούρο χρώμα κόντρα στο index.css */}
           <h1 className="text-3xl font-extrabold !text-gray-900">Groovy<span className="text-orange-500">Calendar</span></h1>
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Prev</button>
-            {/* Βάλαμε !text-gray-900 και εδώ για τον μήνα */}
             <h2 className="text-xl font-bold w-32 text-center !text-gray-900">{monthNames[currentMonth - 1]} {currentYear}</h2>
             <button onClick={nextMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Next</button>
           </div>
         </header>
 
         <div className="flex flex-col-reverse lg:flex-row gap-8">
-          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
-            {/* ΕΔΩ ΗΤΑΝ ΤΟ ΛΑΘΟΣ: Διορθώσαμε το 7500px σε 750px */}
-            <div className="min-w-[750px] lg:min-w-full">
+
+          {/* 2. ΑΛΛΑΓΗ: Το κάναμε ξανά overflow-hidden αντί για overflow-x-auto */}
+          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+
+            {/* 3. ΑΛΛΑΓΗ: Σβήσαμε το min-w-[750px] και βάλαμε w-full για να "ζουληχτεί" και να χωρέσει στην οθόνη! */}
+            <div className="w-full">
               <div className="grid grid-cols-7 bg-gray-100 border-b">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="py-2 text-center text-xs font-bold text-gray-500 uppercase">{day}</div>
+                  // 4. ΑΛΛΑΓΗ (Προαιρετική): Κάναμε τα αρχικά των ημερών λίγο πιο μικρά στα κινητά (text-[10px])
+                  <div key={day} className="py-2 text-center text-[10px] md:text-xs font-bold text-gray-500 uppercase">{day}</div>
                 ))}
               </div>
               <div className="grid grid-cols-7 bg-white">
@@ -96,19 +99,13 @@ export default function App() {
 
           {selectedEvent && (
             <div className="lg:w-80 bg-white p-6 rounded-2xl shadow-lg h-fit lg:sticky lg:top-8">
-
-              {/* --- ΝΕΟ: Το Όνομα της Σχολής Πάνω Πάνω! --- */}
               <div className="flex items-center gap-2 mb-4 text-orange-600 border-b border-gray-100 pb-3">
                 <span className="text-xl">🏫</span>
                 <span className="font-extrabold uppercase tracking-wider text-sm">
                   {selectedEvent.SchoolName}
                 </span>
               </div>
-              {/* ------------------------------------------ */}
 
-              {/* ------------------------------------------ */}
-
-              {/* --- SMART THUMBNAIL LAYOUT --- */}
               <div className="w-full max-h-[320px] mb-4 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center p-1">
                 <img
                   src={selectedEvent.ImageUrl}
@@ -130,7 +127,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Τα δύο κουμπιά */}
               <div className="flex gap-2 mt-6">
                 <a
                   href={selectedEvent.EventUrl}
