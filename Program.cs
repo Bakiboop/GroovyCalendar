@@ -64,7 +64,14 @@ namespace GroovyCalendar
                     Console.WriteLine($"DJ:       {ev.Dj}");
                 }
 
-                string reactPublicPath = @"C:\Users\Christian Culbida\Documents\GroovyCalendar\frontend\public\events.json";
+                // Βρίσκει τον φάκελο που τρέχει το πρόγραμμα και πηγαίνει "έναν φάκελο πίσω" (..) για να βρει το frontend
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                // Ανεβαίνουμε επίπεδα (από το bin/Debug/net8.0) για να φτάσουμε στον κεντρικό φάκελο GroovyCalendar
+                string projectRoot = Directory.GetParent(baseDir).Parent.Parent.Parent.FullName;
+                string reactPublicPath = Path.Combine(projectRoot, "..", "frontend", "public", "events.json");
+
+                // Ένας μικρός έλεγχος για να δούμε πού πάει να το σώσει
+                Console.WriteLine($"[LOG] Saving to dynamic path: {reactPublicPath}");
 
                 try
                 {

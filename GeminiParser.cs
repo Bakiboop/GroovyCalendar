@@ -6,14 +6,27 @@ namespace GroovyCalendar.SchoolScrapers
 {
     public class GeminiParser
     {
-        private readonly string _apiKey = "AQ.Ab8RN6LPF7WLdDGPazGoxjqzNyZ7y7vauqqUm7yDCGsDkp_ztg";
 
         public async Task<List<SwingEvent>> ExtractAllEventsAsync(List<(string PostUrl, string Caption, string ImageUrl, string Username)> allPosts)
         {
+            string apiKey = "";
+            try
+            {
+                string settingsJson = File.ReadAllText("appsettings.json");
+                using JsonDocument doc = JsonDocument.Parse(settingsJson);
+                apiKey = doc.RootElement.GetProperty("GeminiApiKey").GetString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[CRITICAL ERROR] Could not read API Key from appsettings.json!");
+                Console.WriteLine($"Make sure the file exists and is copied to the output directory. Error: {ex.Message}");
+                return new List<SwingEvent>(); // Σταματάει αν δεν βρει το κλειδί
+            }
+
             Console.WriteLine("[AI] Sending BATCH request to Gemini for parsing...");
 
             using var client = new HttpClient();
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={_apiKey}";
+            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={apiKey}";
 
             // Χτίζουμε το τεράστιο κείμενο, δίνοντας στο AI και το Username του κάθε post!
             var sb = new StringBuilder();

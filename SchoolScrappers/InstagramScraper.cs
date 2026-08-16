@@ -39,6 +39,11 @@ namespace GroovyCalendar.SchoolScrapers
                     var page = await context.NewPageAsync();
                     if (!File.Exists(authFile))
                     {
+                        if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+                        {
+                            throw new Exception("[CRITICAL ERROR] auth.json missing in GitHub Actions! Stopping to prevent infinite hang.");
+                        }
+
                         Console.WriteLine("[LOG] No saved session found. Navigating to login...");
                         await page.GotoAsync("https://www.instagram.com/accounts/login/");
                         Console.WriteLine("\n*******************************************************");
