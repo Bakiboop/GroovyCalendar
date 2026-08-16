@@ -1,0 +1,7 @@
+# C# / .NET αρχεία
+**/bin/
+**/obj/
+
+# secrets
+appsettings.json
+auth.json

@@ -1,0 +1,51 @@
+name: Nightly Groovy Scraper
+
+# Πότε θα τρέχει το ρομπότ:
+on:
+  schedule:
+    - cron: '0 2 * * *' # Κάθε βράδυ στις 02:00 τα ξημερώματα (UTC)
+  workflow_dispatch: # Μας επιτρέπει να το τρέχουμε και χειροκίνητα με ένα κουμπί για δοκιμές!
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest # Τρέχει σε ένα δωρεάν Linux μηχάνημα της Google/Microsoft
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x' # Ή 8.0.x, ανάλογα τι χρησιμοποιείς
+
+      # ΑΝΑΚΑΤΑΣΚΕΥΗ ΤΩΝ ΜΥΣΤΙΚΩΝ ΑΡΧΕΙΩΝ ΑΠΟ ΤΑ SECRETS
+      - name: Recreate Secret Files
+        run: |
+          echo '${{ secrets.IG_AUTH_JSON }}' > auth.json
+          echo '{"GeminiApiKey": "${{ secrets.GEMINI_API_KEY }}"}' > appsettings.json
+
+      - name: Build Project
+        run: dotnet build
+
+      - name: Install Playwright Browsers
+        run: |
+          dotnet tool install --global Microsoft.Playwright.CLI
+          playwright install chromium --with-deps
+
+      - name: Run Scraper
+        run: dotnet run
+        env:
+          GITHUB_ACTIONS: true # Το σημαδάκι μας για να ξέρει η C# πού βρίσκεται!
+
+      - name: Commit and Push Updated events.json
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/events.json
+          # Αν δεν υπάρχουν αλλαγές, δεν κρασάρει, απλά το προσπερνάει
+          git commit -m "Auto-update events.json [skip ci]" || echo "No changes to commit"
+          git push

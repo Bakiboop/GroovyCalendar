@@ -68,7 +68,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-sans">
       <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm">
+        <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm">
           <h1 className="text-3xl font-extrabold text-gray-900">Groovy<span className="text-orange-500">Calendar</span></h1>
           <div className="flex items-center gap-4">
             <button onClick={prevMonth} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Prev</button>
@@ -78,14 +78,18 @@ export default function App() {
         </header>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-7 bg-gray-100 border-b">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="py-2 text-center text-xs font-bold text-gray-500 uppercase">{day}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 bg-white">
-              {renderCalendarDays()}
+          {/* Αλλάξαμε το overflow-hidden σε overflow-x-auto */}
+          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
+            {/* Βάλαμε ένα div με min-w-[700px] για να μην στριμώχνονται οι μέρες στα κινητά */}
+            <div className="min-w-[500px] lg:min-w-full">
+              <div className="grid grid-cols-7 bg-gray-100 border-b">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                  <div key={day} className="py-2 text-center text-xs font-bold text-gray-500 uppercase">{day}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 bg-white">
+                {renderCalendarDays()}
+              </div>
             </div>
           </div>
 
