@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react'; // Προσθέσαμε το useEffect
+import React, { useState, useEffect } from 'react';
 
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
-export default function App() {
-  // 1. Νέο State για τα events (ξεκινάει άδειο)
-  const [eventsData, setEventsData] = useState([]);
+// Η εικόνα που θα μπαίνει αυτόματα αν λείπει το ImageUrl
+const DEFAULT_IMAGE = "https://placehold.co/400x400/ebdcc5/362c28?text=Groovy+Event";
 
+export default function App() {
+  const [eventsData, setEventsData] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date(2026, 5, 1));
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // 2. Το useEffect τραβάει το JSON μόλις ανοίξει η σελίδα
   useEffect(() => {
     fetch('/events.json')
       .then((response) => response.json())
       .then((data) => {
         setEventsData(data);
-        console.log("Events loaded successfully!", data);
       })
       .catch((error) => console.error("Error fetching events:", error));
   }, []);
@@ -34,28 +33,33 @@ export default function App() {
 
   const renderCalendarDays = () => {
     const days = [];
+    // Κενές μέρες
     for (let i = 0; i < startDayPadding; i++) {
-      days.push(<div key={`empty-${i}`} className="p-2 border border-gray-200 bg-gray-50 min-h-[100px]"></div>);
+      days.push(<div key={`empty-${i}`} className="p-2 border-r-2 border-b-2 border-[#362c28] bg-[#ebdcc5]/60 min-h-[100px]"></div>);
     }
+    // Κανονικές μέρες
     for (let i = 1; i <= daysInMonth; i++) {
       const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-
-      // Το eventsData τώρα είναι δυναμικό!
       const dayEvents = eventsData.filter(e => e.Date === dateString);
 
       days.push(
-        <div key={i} className="p-2 border border-gray-200 hover:bg-orange-50 min-h-[100px] flex flex-col transition-colors">
-          <span className="text-sm font-bold text-gray-700">{i}</span>
-          <div className="flex flex-col gap-1 mt-1">
+        <div key={i} className="p-2 border-r-2 border-b-2 border-[#362c28] bg-[#fcf8f2] hover:bg-[#f7efe1] min-h-[100px] flex flex-col transition-colors">
+          <span className="text-xl font-black text-[#362c28]">{i}</span>
+
+          <div className="flex flex-row flex-wrap gap-2 mt-2">
             {dayEvents.map((event, idx) => (
               <div
                 key={idx}
                 onClick={() => setSelectedEvent(event)}
-                className="bg-orange-500 text-white p-1 md:p-1.5 rounded cursor-pointer hover:bg-orange-600 transition-colors shadow-sm mb-1"
+                title={`${event.Title} @ ${event.SchoolName}`}
+                className="w-8 h-8 md:w-10 md:h-10 border-2 border-[#362c28] rounded-sm cursor-pointer hover:-translate-y-0.5 transition-all shadow-[2px_2px_0_0_#362c28] overflow-hidden flex-shrink-0 bg-[#ebdcc5]"
               >
-                <div className="text-[10px] md:text-xs font-bold truncate">{event.Title}</div>
-                {/* Εδώ βάλαμε το όνομα της σχολής κάτω από τον τίτλο */}
-                <div className="text-[9px] opacity-90 truncate">{event.SchoolName}</div>
+                <img
+                  // Αν υπάρχει ImageUrl το βάζει, αλλιώς βάζει το DEFAULT_IMAGE
+                  src={event.ImageUrl || DEFAULT_IMAGE}
+                  alt={event.Title}
+                  className="w-full h-full object-cover sepia-[0.1] contrast-105"
+                />
               </div>
             ))}
           </div>
@@ -66,79 +70,97 @@ export default function App() {
   };
 
   return (
-    // 1. ΑΛΛΑΓΗ: Αλλάξαμε το p-8 σε p-2 md:p-8. Έτσι στο κινητό κερδίζουμε πάρα πολύ χώρο δεξιά-αριστερά!
-    <div className="min-h-screen bg-gray-100 p-2 md:p-8 font-sans">
+    <div className="min-h-screen bg-[#ebdcc5] p-4 md:p-8 font-sans text-[#362c28] selection:bg-[#d4735e] selection:text-[#fcf8f2]">
       <div className="max-w-6xl mx-auto">
-        <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm">
-          <h1 className="text-3xl font-extrabold !text-gray-900">Groovy<span className="text-orange-500">Calendar</span></h1>
-          <div className="flex items-center gap-4">
-            <button onClick={prevMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Prev</button>
-            <h2 className="text-xl font-bold w-32 text-center !text-gray-900">{monthNames[currentMonth - 1]} {currentYear}</h2>
-            <button onClick={nextMonth} className="px-4 py-2 bg-gray-200 text-gray-900 font-semibold rounded-lg hover:bg-gray-300">Next</button>
+
+        <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
+          <div className="flex flex-col items-center md:items-start transform -rotate-1">
+            <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
+              Groovy<span className="text-[#e8a56f]">Calendar</span>
+            </h1>
+            <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
+              Find Your Next Social
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 bg-[#fcf8f2] p-2 rounded-lg border-4 border-[#362c28] shadow-[4px_4px_0_0_#362c28]">
+            <button onClick={prevMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
+              Prev
+            </button>
+            <div className="flex flex-col items-center justify-center w-32">
+              <h2 className="text-xl font-black text-[#362c28] uppercase">{monthNames[currentMonth - 1]}</h2>
+              <span className="text-sm font-bold text-[#d4735e]">{currentYear}</span>
+            </div>
+            <button onClick={nextMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
+              Next
+            </button>
           </div>
         </header>
 
-        <div className="flex flex-col-reverse lg:flex-row gap-8">
+        <div className="flex flex-col-reverse lg:flex-row gap-10">
 
-          {/* 2. ΑΛΛΑΓΗ: Το κάναμε ξανά overflow-hidden αντί για overflow-x-auto */}
-          <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-
-            {/* 3. ΑΛΛΑΓΗ: Σβήσαμε το min-w-[750px] και βάλαμε w-full για να "ζουληχτεί" και να χωρέσει στην οθόνη! */}
+          <div className="flex-1 bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden">
             <div className="w-full">
-              <div className="grid grid-cols-7 bg-gray-100 border-b">
+              <div className="grid grid-cols-7 bg-[#d4735e] border-b-4 border-[#362c28]">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  // 4. ΑΛΛΑΓΗ (Προαιρετική): Κάναμε τα αρχικά των ημερών λίγο πιο μικρά στα κινητά (text-[10px])
-                  <div key={day} className="py-2 text-center text-[10px] md:text-xs font-bold text-gray-500 uppercase">{day}</div>
+                  <div key={day} className="py-3 text-center text-xs md:text-sm font-black text-[#fcf8f2] uppercase tracking-widest">{day}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 bg-white">
+              <div className="grid grid-cols-7 bg-[#fcf8f2]">
                 {renderCalendarDays()}
               </div>
             </div>
           </div>
 
           {selectedEvent && (
-            <div className="lg:w-80 bg-white p-6 rounded-2xl shadow-lg h-fit lg:sticky lg:top-8">
-              <div className="flex items-center gap-2 mb-4 text-orange-600 border-b border-gray-100 pb-3">
-                <span className="text-xl">🏫</span>
-                <span className="font-extrabold uppercase tracking-wider text-sm">
+            <div className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit lg:sticky lg:top-8 transform rotate-1 transition-transform">
+              <div className="flex items-center gap-3 mb-4 text-[#d4735e] border-b-4 border-[#362c28] pb-4">
+                <span className="text-3xl filter drop-shadow-[2px_2px_0_#362c28]">🎸</span>
+                <span className="font-black uppercase tracking-wider text-sm text-[#362c28]">
                   {selectedEvent.SchoolName}
                 </span>
               </div>
 
-              <div className="w-full max-h-[320px] mb-4 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center p-1">
+              {/* Εικόνα που γεμίζει ακριβώς το πλαίσιο (edge-to-edge) */}
+              <div className="w-full mb-6 overflow-hidden border-4 border-[#2c1e16] shadow-[4px_4px_0_0_#2c1e16] flex bg-[#2c1e16]">
                 <img
                   src={selectedEvent.ImageUrl}
                   alt={selectedEvent.Title}
-                  className="max-w-full max-h-[310px] object-contain rounded-lg"
+                  className="w-full h-auto block object-cover sepia-[0.2] contrast-105"
                 />
               </div>
 
-              <h3 className="font-bold text-lg mb-2 text-gray-900 leading-tight">{selectedEvent.Title}</h3>
-              <div className="flex flex-col gap-1.5 mt-4">
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <span>📅</span> {selectedEvent.Date} | {selectedEvent.Time}
-                </p>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <span>📍</span> {selectedEvent.Location}
-                </p>
-                <p className="text-sm text-orange-600 font-bold flex items-center gap-2 mt-1">
-                  <span>🎟️</span> {selectedEvent.Price}
-                </p>
+              <h3 className="font-black text-2xl mb-4 text-[#362c28] leading-tight">{selectedEvent.Title}</h3>
+
+              <div className="flex flex-col gap-3 mt-4 font-bold text-sm bg-[#ebdcc5]/60 p-4 border-2 border-[#362c28] rounded-lg shadow-[inset_2px_2px_0_0_#362c28]">
+                <div className="flex items-start gap-3 text-[#362c28]">
+                  <span className="text-xl leading-none mt-0.5">⏰</span>
+                  <span className="leading-tight">{selectedEvent.Date} | {selectedEvent.Time}</span>
+                </div>
+
+                <div className="flex items-start gap-3 text-[#362c28]">
+                  <span className="text-xl leading-none mt-0.5">📍</span>
+                  <span className="leading-tight">{selectedEvent.Location}</span>
+                </div>
+
+                <div className="flex items-start gap-3 text-[#d4735e] font-black text-xs md:text-sm pt-1">
+                  <span className="text-xl leading-none mt-0.5">🎟️</span>
+                  <span className="leading-tight mt-1.5">{selectedEvent.Price}</span>
+                </div>
               </div>
 
-              <div className="flex gap-2 mt-6">
+              <div className="flex gap-4 mt-6">
                 <a
                   href={selectedEvent.EventUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 text-center py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm shadow-sm"
+                  className="flex-1 text-center py-3 bg-[#d4735e] text-[#fcf8f2] border-2 border-[#362c28] hover:bg-[#bd634e] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase"
                 >
                   Event Link
                 </a>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  className="py-3 px-4 bg-[#fcf8f2] text-[#362c28] border-2 border-[#362c28] hover:bg-[#ebdcc5] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase"
                 >
                   Close
                 </button>

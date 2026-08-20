@@ -5,7 +5,8 @@ namespace GroovyCalendar.SchoolScrapers
 {
     public class InstagramScraper
     {
-        public async Task<List<(string PostUrl, string Caption, string ImageUrl)>> ScrapeLatestPostsAsync(string username)
+        // ΑΛΛΑΓΗ ΕΔΩ 
+        public async Task<List<(string PostUrl, string Caption, string ImageUrl)>> ScrapeLatestPostsAsync(string username, List<string> existingUrls = null)
         {
             {
                 var extractedPosts = new List<(string PostUrl, string Caption, string ImageUrl)>();
@@ -83,6 +84,12 @@ namespace GroovyCalendar.SchoolScrapers
                     int maxPostsToCheck = Math.Min(6, postUrls.Count); // Ελέγχουμε 10 posts για να βρούμε τα πάρτι
                     for (int i = 0; i < maxPostsToCheck; i++)
                     {
+                        if (existingUrls != null && existingUrls.Contains(postUrls[i]))
+                        {
+                            Console.WriteLine($"[SKIP] Post already in database. Skipping -> {postUrls[i]}");
+                            continue;
+                        }
+
                         await page.GotoAsync(postUrls[i], new PageGotoOptions { WaitUntil = WaitUntilState.Load });
                         await page.WaitForTimeoutAsync(800);
 

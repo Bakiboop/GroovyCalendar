@@ -5,3 +5,6 @@
 # secrets
 appsettings.json
 auth.json
+
+# logs
+scraper_logs.json

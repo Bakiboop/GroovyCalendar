@@ -64,17 +64,47 @@ Here are the posts:
                 var response = await client.PostAsync(url, content);
                 string responseString = await response.Content.ReadAsStringAsync();
 
-                using var doc = JsonDocument.Parse(responseString);
-                var aiTextResponse = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+                // 1. Έλεγχος αν το Request στο AI απέτυχε (π.χ. λάθος API Key, Limit Reached κλπ)
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[API ERROR] Το API επέστρεψε κωδικό {response.StatusCode}.");
+                    Console.WriteLine($"[API RAW RESPONSE]: {responseString}");
+                    return new List<SwingEvent>();
+                }
 
+                using var doc = JsonDocument.Parse(responseString);
+
+                // 2. Ασφαλής έλεγχος αν υπάρχει το "candidates"
+                if (!doc.RootElement.TryGetProperty("candidates", out var candidatesElement) || candidatesElement.GetArrayLength() == 0)
+                {
+                    Console.WriteLine("[AI ERROR] Δεν βρέθηκε το πεδίο 'candidates' στην απάντηση. Μήπως μπλοκαρίστηκε από τα Safety Settings;");
+                    Console.WriteLine($"[API RAW RESPONSE]: {responseString}");
+                    return new List<SwingEvent>();
+                }
+
+                // Παίρνουμε το κείμενο με ασφάλεια
+                var aiTextResponse = candidatesElement[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text").GetString();
+
+                if (string.IsNullOrWhiteSpace(aiTextResponse))
+                {
+                    Console.WriteLine("[AI ERROR] Το κείμενο (text) της απάντησης ήταν άδειο.");
+                    return new List<SwingEvent>();
+                }
+
+                // 3. Καθαρισμός του Markdown
                 aiTextResponse = aiTextResponse.Replace("```json", "").Replace("```", "").Trim();
 
-                return JsonSerializer.Deserialize<List<SwingEvent>>(aiTextResponse);
+                // 4. Case-insensitive Deserialization (ώστε αν το AI γράψει "title" αντί για "Title" να μην χαθεί)
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<List<SwingEvent>>(aiTextResponse, options) ?? new List<SwingEvent>();
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AI EXCEPTION] {ex.Message}");
+                Console.WriteLine($"[AI EXCEPTION] Απέτυχε το Parsing του JSON: {ex.Message}");
                 return new List<SwingEvent>();
             }
         }

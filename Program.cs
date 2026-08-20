@@ -1,11 +1,19 @@
-﻿using GroovyCalendar.Models;
-using GroovyCalendar.SchoolScrapers;
+﻿using GroovyCalendar.SchoolScrapers;
 using System.Text.Json;
+using GroovyCalendar.Models;
 
 namespace GroovyCalendar
 {
     class Program
     {
+        //Log
+        public static List<string> AppLogs = new List<string>();
+
+        public static void Log(string message)
+        {
+            Console.WriteLine(message);
+            AppLogs.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
+        }
         static async Task Main(string[] args)
         {
             Console.WriteLine("Starting GroovyCalendar Instagram Test...\n");
@@ -13,20 +21,37 @@ namespace GroovyCalendar
             var instaScraper = new InstagramScraper();
             var aiParser = new GeminiParser();
 
+            // 1. Ορίζουμε το path για το events.json
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string projectRoot = Directory.GetParent(baseDir).Parent.Parent.Parent.FullName;
+            string reactPublicPath = Path.Combine(projectRoot, "frontend", "public", "events.json");
+            // 2. Διαβάζουμε τα ΥΠΑΡΧΟΝΤΑ events για να βρούμε τα URLs (ώστε να μην τα ξανακατεβάσουμε)
+            List<string> existingUrls = new List<string>();
+            string existingJson = "[]";
+
+            if (File.Exists(reactPublicPath))
+            {
+                existingJson = File.ReadAllText(reactPublicPath);
+                using (JsonDocument doc = JsonDocument.Parse(existingJson))
+                {
+                    foreach (JsonElement element in doc.RootElement.EnumerateArray())
+                    {
+                        // Αν το event έχει ήδη URL (EventUrl ή PostUrl ανάλογα πώς το έχεις ονομάσει), το κρατάμε
+                        if (element.TryGetProperty("EventUrl", out JsonElement urlElement) ||
+                            element.TryGetProperty("PostUrl", out urlElement))
+                        {
+                            existingUrls.Add(urlElement.GetString());
+                        }
+                    }
+                }
+                Console.WriteLine($"[LOG] Found {existingUrls.Count} existing events in database. Scraper will skip them.");
+            }
+
             var profilesToScrape = new List<string>
             {
-                "groove_inathens",
-                "athenslindyhop",
-                "swing_that_thing_athens",
-                "jumpnjive.gr",
-                "athensbalboa",
-                "jazz_reactor",
-                "hoppers_in_athens",
-                "bluefox_athens",
-                "stompingr",
-                "rollinfoxes",
-                "athens_boogie"
-                // Πρόσθεσε όσα θες εδώ, απλά βάζοντας το username!
+                "groove_inathens", "athenslindyhop", "swing_that_thing_athens",
+                "jumpnjive.gr", "athensbalboa", "jazz_reactor", "hoppers_in_athens",
+                "bluefox_athens", "stompingr", "rollinfoxes", "athens_boogie"
             };
 
             var allScrapedPosts = new List<(string PostUrl, string Caption, string ImageUrl, string Username)>();
@@ -34,79 +59,109 @@ namespace GroovyCalendar
             foreach (var instaHandle in profilesToScrape)
             {
                 Console.WriteLine($"\n🔍 SCANNING PROFILE: @{instaHandle}");
-                var scrapedPosts = await instaScraper.ScrapeLatestPostsAsync(instaHandle);
+
+                // 3. Περνάμε τη λίστα με τα υπάρχοντα URLs στον Scraper!
+                var scrapedPosts = await instaScraper.ScrapeLatestPostsAsync(instaHandle, existingUrls);
 
                 foreach (var post in scrapedPosts)
                 {
                     allScrapedPosts.Add((post.PostUrl, post.Caption, post.ImageUrl, instaHandle));
                 }
             }
-            Console.WriteLine($"\n=== FINISHED SCRAPING. FOUND {allScrapedPosts.Count} TOTAL PARTY POSTS. SENDING TO AI... ===");
 
-            var allEvents = await aiParser.ExtractAllEventsAsync(allScrapedPosts);
-            // Τρέχουμε τον Scraper
-            Console.WriteLine("\n=== FINAL CALENDAR ===");
+            Console.WriteLine($"\n=== FINISHED SCRAPING. FOUND {allScrapedPosts.Count} NEW PARTY POSTS. SENDING TO AI... ===");
+
+            // 4. Στέλνουμε στο AI ΜΟΝΟ τα καινούργια! Το AI γλιτώνει χρόνο και εσύ tokens.
+            var newEvents = await aiParser.ExtractAllEventsAsync(allScrapedPosts);
+            var options = new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+            Console.WriteLine("\n=== MERGING WITH EXISTING CALENDAR ===");
+
+            var existingEvents = JsonSerializer.Deserialize<List<SwingEvent>>(existingJson, options) ?? new List<SwingEvent>();
+
+            var allEvents = new List<SwingEvent>();
+            allEvents.AddRange(existingEvents); // Βάζουμε τα παλιά
+            allEvents.AddRange(newEvents);      // Προσθέτουμε τα νέα
 
             if (allEvents.Count == 0)
             {
-                Console.WriteLine("No parties parsed successfully.");
+                Console.WriteLine("No parties in calendar.");
             }
             else
             {
-                foreach (var ev in allEvents)
+                // 6. Ξεκαθαρίζουμε διπλότυπα & Merge collabs από όλη τη βάση πλέον
+                var uniqueEvents = allEvents
+                    .GroupBy(e => new { e.Date, Title = e.Title.Trim().ToLower() })
+                    .Select(group =>
+                    {
+                        var mergedEvent = group.First();
+                        var schools = group.Select(e => e.SchoolName).Distinct().ToList();
+                        mergedEvent.SchoolName = string.Join(" & ", schools);
+                        return mergedEvent;
+                    })
+                    .ToList();
+
+                foreach (var ev in uniqueEvents)
                 {
                     Console.WriteLine("--------------------------------------------------");
                     Console.WriteLine($"TITLE:    {ev.Title}");
-                    Console.WriteLine($"TYPE:     {ev.Type}");
                     Console.WriteLine($"DATE:     {ev.Date} at {ev.Time}");
-                    Console.WriteLine($"LOCATION: {ev.Location}");
-                    Console.WriteLine($"PRICE:    {ev.Price}");
-                    Console.WriteLine($"DJ:       {ev.Dj}");
+                    Console.WriteLine($"SCHOOL:   {ev.SchoolName}");
                 }
 
-                // Βρίσκει τον φάκελο που τρέχει το πρόγραμμα και πηγαίνει "έναν φάκελο πίσω" (..) για να βρει το frontend
-                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                // Ανεβαίνουμε επίπεδα (από το bin/Debug/net8.0) για να φτάσουμε στον κεντρικό φάκελο GroovyCalendar
-                string projectRoot = Directory.GetParent(baseDir).Parent.Parent.Parent.FullName;
-                string reactPublicPath = Path.Combine(projectRoot, "..", "frontend", "public", "events.json");
-
-                // Ένας μικρός έλεγχος για να δούμε πού πάει να το σώσει
                 Console.WriteLine($"[LOG] Saving to dynamic path: {reactPublicPath}");
 
                 try
                 {
-                    // 1. Ομαδοποιούμε τα events που είναι διπλότυπα (με βάση την Ημερομηνία και τον Τίτλο τους)
-                    var uniqueEvents = allEvents
-                        .GroupBy(e => new { e.Date, Title = e.Title.Trim().ToLower() })
-                        .Select(group =>
-                        {
-                            // Παίρνουμε το πρώτο σαν βάση
-                            var mergedEvent = group.First();
-
-                            // Μαζεύουμε όλα τα διαφορετικά SchoolNames από τα collab posts
-                            var schools = group.Select(e => e.SchoolName).Distinct().ToList();
-
-                            // Τα ενώνουμε με " & " (π.χ. "Groove in Athens & Stomping Ground")
-                            mergedEvent.SchoolName = string.Join(" & ", schools);
-
-                            return mergedEvent;
-                        })
-                        .ToList();
-
-                    var options = new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
                     string jsonString = JsonSerializer.Serialize(uniqueEvents, options);
                     File.WriteAllText(reactPublicPath, jsonString);
-
-                    Console.WriteLine($"\n[SUCCESS] Saved {uniqueEvents.Count} unique events (after merging collabs) to: {reactPublicPath}");
+                    Console.WriteLine($"\n[SUCCESS] Saved {uniqueEvents.Count} total events to JSON!");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"\n[ERROR] Could not save JSON file: {ex.Message}");
                 }
-            } // <--- Κλείνει το else
+            }
 
             Console.WriteLine("--------------------------------------------------");
             Console.WriteLine("\nScraping finished!");
+
+
+            //Logging to JSON file
+
+            Log("--------------------------------------------------");
+            Log("\nScraping finished!");
+
+            // --- ΝΕΟΣ ΚΩΔΙΚΑΣ: ΑΠΟΘΗΚΕΥΣΗ LOGS ΣΕ JSON ---
+            try
+            {
+                string logFilePath = Path.Combine(projectRoot, "frontend", "public", "scraper_logs.json");
+                // Δημιουργούμε το αντικείμενο του σημερινού τρεξίματος
+                var currentRunLog = new
+                {
+                    RunDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    TotalMessages = AppLogs.Count,
+                    Messages = AppLogs
+                };
+
+
+                var allHistoryLogs = new List<object>();
+                if (File.Exists(logFilePath))
+                {
+                    string existingLogs = File.ReadAllText(logFilePath);
+                    allHistoryLogs = JsonSerializer.Deserialize<List<object>>(existingLogs) ?? new List<object>();
+                }
+
+                allHistoryLogs.Add(currentRunLog);
+
+                // Τα κάνουμε save!
+                string logJsonString = JsonSerializer.Serialize(allHistoryLogs, options);
+                File.WriteAllText(logFilePath, logJsonString);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not save logs: {ex.Message}");
+            }
         }
     }
 }
