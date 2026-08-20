@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
-// Η εικόνα που θα μπαίνει αυτόματα αν λείπει το ImageUrl
-const DEFAULT_IMAGE = "https://placehold.co/400x400/ebdcc5/362c28?text=Groovy+Event";
 
 export default function App() {
   const [eventsData, setEventsData] = useState([]);
@@ -55,9 +53,9 @@ export default function App() {
                 className="w-8 h-8 md:w-10 md:h-10 border-2 border-[#362c28] rounded-sm cursor-pointer hover:-translate-y-0.5 transition-all shadow-[2px_2px_0_0_#362c28] overflow-hidden flex-shrink-0 bg-[#ebdcc5]"
               >
                 <img
-                  // Αν υπάρχει ImageUrl το βάζει, αλλιώς βάζει το DEFAULT_IMAGE
-                  src={event.ImageUrl || DEFAULT_IMAGE}
+                  src={event.ImageUrl}
                   alt={event.Title}
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover sepia-[0.1] contrast-105"
                 />
               </div>
@@ -88,7 +86,9 @@ export default function App() {
               Prev
             </button>
             <div className="flex flex-col items-center justify-center w-32">
-              <h2 className="text-xl font-black text-[#362c28] uppercase">{monthNames[currentMonth - 1]}</h2>
+              <div className="bg-[#362c28] text-[#e8a56f] font-black px-3 py-1 rounded-sm border-2 border-[#362c28] shadow-[2px_2px_0_0_#d4735e] uppercase tracking-widest mb-1">
+                {monthNames[currentMonth - 1]}
+              </div>
               <span className="text-sm font-bold text-[#d4735e]">{currentYear}</span>
             </div>
             <button onClick={nextMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
