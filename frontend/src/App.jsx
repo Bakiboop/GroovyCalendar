@@ -5,10 +5,10 @@ const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay(
 
 export default function App() {
   const [eventsData, setEventsData] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date()); // Ανοίγει στον τρέχοντα μήνα!
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΜΠΗΚΕ ΕΔΩ ΜΕΣΑ! ---
+  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ---
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
@@ -26,7 +26,7 @@ export default function App() {
     if (isLeftSwipe) nextMonth();
     if (isRightSwipe) prevMonth();
   };
-  // ------------------------------------------
+  // --------------------------
 
   useEffect(() => {
     fetch('/events.json')
@@ -50,11 +50,9 @@ export default function App() {
 
   const renderCalendarDays = () => {
     const days = [];
-    // Κενές μέρες
     for (let i = 0; i < startDayPadding; i++) {
       days.push(<div key={`empty-${i}`} className="p-2 border-r-2 border-b-2 border-[#362c28] bg-[#ebdcc5]/60 min-h-[100px]"></div>);
     }
-    // Κανονικές μέρες
     for (let i = 1; i <= daysInMonth; i++) {
       const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       const dayEvents = eventsData.filter(e => e.Date === dateString);
@@ -92,54 +90,76 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#ebdcc5] p-4 md:p-8 font-sans text-[#362c28] selection:bg-[#d4735e] selection:text-[#fcf8f2]">
+
+      {/* 🌟 ΕΔΩ ΟΡΙΖΟΥΜΕ ΤΟ ANIMATION (Γράφουμε λίγο καθαρό CSS) */}
+      <style>{`
+        @keyframes slideFadeIn {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-month-change {
+          animation: slideFadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
+
       <div className="max-w-6xl mx-auto">
 
-        <header className="sticky top-0 z-50 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
-          <div className="flex flex-col items-center md:items-start transform -rotate-1">
-            <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
-              Groovy<span className="text-[#e8a56f]">Calendar</span>
-            </h1>
-            <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
-              Find Your Next Social
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 bg-[#fcf8f2] p-2 rounded-lg border-4 border-[#362c28] shadow-[4px_4px_0_0_#362c28]">
-            <button onClick={prevMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
-              Prev
-            </button>
-            <div className="flex flex-col items-center justify-center w-32">
-              <div className="bg-[#362c28] text-[#e8a56f] font-black px-3 py-1 rounded-sm border-2 border-[#362c28] shadow-[2px_2px_0_0_#d4735e] uppercase tracking-widest mb-1">
-                {monthNames[currentMonth - 1]}
-              </div>
-              <span className="text-sm font-bold text-[#d4735e]">{currentYear}</span>
-            </div>
-            <button onClick={nextMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
-              Next
-            </button>
-          </div>
-        </header>
-
+        {/* Εδώ το flex-col-reverse κάνει τη μαγεία: στο κινητό το Event πάει ΠΑΝΩ και η αριστερή στήλη ΚΑΤΩ */}
         <div className="flex flex-col-reverse lg:flex-row gap-10">
 
-          <div
-            className="flex-1 bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEndHandler}
-          >
-            <div className="w-full">
-              <div className="grid grid-cols-7 bg-[#d4735e] border-b-4 border-[#362c28]">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="py-3 text-center text-xs md:text-sm font-black text-[#fcf8f2] uppercase tracking-widest">{day}</div>
-                ))}
+          {/* === ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ (Στο κινητό μπαίνει κάτω από το event) === */}
+          <div className="flex-1 flex flex-col gap-8">
+
+            {/* Το Navbar μεταφέρθηκε ΕΔΩ μέσα! */}
+            <header className="sticky top-0 z-50 flex flex-col md:flex-row justify-between items-center gap-6 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
+              <div className="flex flex-col items-center md:items-start transform -rotate-1">
+                <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
+                  Groovy<span className="text-[#e8a56f]">Calendar</span>
+                </h1>
+                <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
+                  Find Your Next Social
+                </span>
               </div>
-              <div className="grid grid-cols-7 bg-[#fcf8f2]">
-                {renderCalendarDays()}
+
+              <div className="flex items-center gap-4 bg-[#fcf8f2] p-2 rounded-lg border-4 border-[#362c28] shadow-[4px_4px_0_0_#362c28]">
+                <button onClick={prevMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
+                  Prev
+                </button>
+                <div className="flex flex-col items-center justify-center w-32">
+                  <div className="bg-[#362c28] text-[#e8a56f] font-black px-3 py-1 rounded-sm border-2 border-[#362c28] shadow-[2px_2px_0_0_#d4735e] uppercase tracking-widest mb-1">
+                    {monthNames[currentMonth - 1]}
+                  </div>
+                  <span className="text-sm font-bold text-[#d4735e]">{currentYear}</span>
+                </div>
+                <button onClick={nextMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
+                  Next
+                </button>
+              </div>
+            </header>
+
+            {/* Το Ημερολόγιο */}
+            <div
+              key={currentMonth} /* 🌟 Η React βλέπει ότι αλλάζει ο μήνας και "ξαναπαίζει" το animation! */
+              className="animate-month-change bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEndHandler}
+            >
+              <div className="w-full">
+                <div className="grid grid-cols-7 bg-[#d4735e] border-b-4 border-[#362c28]">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="py-3 text-center text-xs md:text-sm font-black text-[#fcf8f2] uppercase tracking-widest">{day}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 bg-[#fcf8f2]">
+                  {renderCalendarDays()}
+                </div>
               </div>
             </div>
+
           </div>
 
+          {/* === ΔΕΞΙΑ ΣΤΗΛΗ (Στο κινητό πάει αυτόματα πάνω από όλα χάρη στο flex-col-reverse) === */}
           {selectedEvent && (
             <div className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit lg:sticky lg:top-8 transform rotate-1 transition-transform">
               <div className="flex items-center gap-3 mb-4 text-[#d4735e] border-b-4 border-[#362c28] pb-4">
@@ -149,7 +169,6 @@ export default function App() {
                 </span>
               </div>
 
-              {/* Εικόνα που γεμίζει ακριβώς το πλαίσιο (edge-to-edge) */}
               <div className="w-full mb-6 overflow-hidden border-4 border-[#2c1e16] shadow-[4px_4px_0_0_#2c1e16] flex bg-[#2c1e16]">
                 <img
                   src={selectedEvent.ImageUrl}
