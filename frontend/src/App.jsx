@@ -3,10 +3,28 @@ import React, { useState, useEffect } from 'react';
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
+const [touchStart, setTouchStart] = useState(null);
+const [touchEnd, setTouchEnd] = useState(null);
+
+// Η λογική του swipe
+const minSwipeDistance = 50; // Πόσα pixels πρέπει να κάνει swipe για να αλλάξει
+const onTouchStart = (e) => {
+  setTouchEnd(null); // Κάνουμε reset
+  setTouchStart(e.targetTouches[0].clientX);
+};
+const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+const onTouchEndHandler = () => {
+  if (!touchStart || !touchEnd) return;
+  const distance = touchStart - touchEnd;
+  const isLeftSwipe = distance > minSwipeDistance;
+  const isRightSwipe = distance < -minSwipeDistance;
+  if (isLeftSwipe) nextMonth(); // Κάνεις swipe αριστερά -> Επόμενος μήνας
+  if (isRightSwipe) prevMonth(); // Κάνεις swipe δεξιά -> Προηγούμενος μήνας
+};
 
 export default function App() {
   const [eventsData, setEventsData] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 5, 1));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
@@ -56,7 +74,11 @@ export default function App() {
                   src={event.ImageUrl}
                   alt={event.Title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover sepia-[0.1] contrast-105"
+                  onError={(e) => {
+                    e.target.onerror = null; // Αποτρέπει το άπειρο loop
+                    e.target.src = '/default-image.jpg'; // Το όνομα της εικόνας σου στον φάκελο public
+                  }}
+                  className="w-full h-full block object-cover sepia-[0.2] contrast-105"
                 />
               </div>
             ))}
@@ -71,15 +93,14 @@ export default function App() {
     <div className="min-h-screen bg-[#ebdcc5] p-4 md:p-8 font-sans text-[#362c28] selection:bg-[#d4735e] selection:text-[#fcf8f2]">
       <div className="max-w-6xl mx-auto">
 
-        <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
-          <div className="flex flex-col items-center md:items-start transform -rotate-1">
-            <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
-              Groovy<span className="text-[#e8a56f]">Calendar</span>
-            </h1>
-            <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
-              Find Your Next Social
-            </span>
-          </div>
+        <header className="sticky top-0 z-50 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">          <div className="flex flex-col items-center md:items-start transform -rotate-1">
+          <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
+            Groovy<span className="text-[#e8a56f]">Calendar</span>
+          </h1>
+          <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
+            Find Your Next Social
+          </span>
+        </div>
 
           <div className="flex items-center gap-4 bg-[#fcf8f2] p-2 rounded-lg border-4 border-[#362c28] shadow-[4px_4px_0_0_#362c28]">
             <button onClick={prevMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
@@ -99,7 +120,12 @@ export default function App() {
 
         <div className="flex flex-col-reverse lg:flex-row gap-10">
 
-          <div className="flex-1 bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden">
+          <div
+            className="flex-1 bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEndHandler}
+          >
             <div className="w-full">
               <div className="grid grid-cols-7 bg-[#d4735e] border-b-4 border-[#362c28]">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
