@@ -41,6 +41,15 @@ jobs:
         env:
           GITHUB_ACTIONS: true # Το σημαδάκι μας για να ξέρει η C# πού βρίσκεται!
 
+      # --- ΝΕΟ ΒΗΜΑ: ΑΠΟΘΗΚΕΥΣΗ LOGS ΣΑΝ ARTIFACT ---
+      - name: Upload Scraper Logs
+        uses: actions/upload-artifact@v4
+        if: always() # Το βάζουμε να τρέχει ΑΚΟΜΑ ΚΑΙ ΑΝ "σκάσει" το Scraper!
+        with:
+          name: nightly-scraper-logs
+          path: frontend/public/scraper_logs.json
+          retention-days: 14 # Θα κρατάει τα logs για 2 εβδομάδες για να μην πιάνουν τζάμπα χώρο
+
       - name: Commit and Push Updated events.json
         run: |
           git config --global user.name 'github-actions[bot]'

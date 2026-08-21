@@ -3,29 +3,30 @@ import React, { useState, useEffect } from 'react';
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
 
-const [touchStart, setTouchStart] = useState(null);
-const [touchEnd, setTouchEnd] = useState(null);
-
-// Η λογική του swipe
-const minSwipeDistance = 50; // Πόσα pixels πρέπει να κάνει swipe για να αλλάξει
-const onTouchStart = (e) => {
-  setTouchEnd(null); // Κάνουμε reset
-  setTouchStart(e.targetTouches[0].clientX);
-};
-const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
-const onTouchEndHandler = () => {
-  if (!touchStart || !touchEnd) return;
-  const distance = touchStart - touchEnd;
-  const isLeftSwipe = distance > minSwipeDistance;
-  const isRightSwipe = distance < -minSwipeDistance;
-  if (isLeftSwipe) nextMonth(); // Κάνεις swipe αριστερά -> Επόμενος μήνας
-  if (isRightSwipe) prevMonth(); // Κάνεις swipe δεξιά -> Προηγούμενος μήνας
-};
-
 export default function App() {
   const [eventsData, setEventsData] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date()); // Ανοίγει στον τρέχοντα μήνα!
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΜΠΗΚΕ ΕΔΩ ΜΕΣΑ! ---
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 50;
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) nextMonth();
+    if (isRightSwipe) prevMonth();
+  };
+  // ------------------------------------------
 
   useEffect(() => {
     fetch('/events.json')
@@ -75,8 +76,8 @@ export default function App() {
                   alt={event.Title}
                   referrerPolicy="no-referrer"
                   onError={(e) => {
-                    e.target.onerror = null; // Αποτρέπει το άπειρο loop
-                    e.target.src = '/default-image.jpg'; // Το όνομα της εικόνας σου στον φάκελο public
+                    e.target.onerror = null;
+                    e.target.src = '/default-image.jpg';
                   }}
                   className="w-full h-full block object-cover sepia-[0.2] contrast-105"
                 />
@@ -93,14 +94,15 @@ export default function App() {
     <div className="min-h-screen bg-[#ebdcc5] p-4 md:p-8 font-sans text-[#362c28] selection:bg-[#d4735e] selection:text-[#fcf8f2]">
       <div className="max-w-6xl mx-auto">
 
-        <header className="sticky top-0 z-50 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">          <div className="flex flex-col items-center md:items-start transform -rotate-1">
-          <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
-            Groovy<span className="text-[#e8a56f]">Calendar</span>
-          </h1>
-          <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
-            Find Your Next Social
-          </span>
-        </div>
+        <header className="sticky top-0 z-50 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
+          <div className="flex flex-col items-center md:items-start transform -rotate-1">
+            <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
+              Groovy<span className="text-[#e8a56f]">Calendar</span>
+            </h1>
+            <span className="text-xs md:text-sm font-bold tracking-widest mt-2 text-[#362c28] bg-[#e8a56f] px-2 py-0.5 border-2 border-[#362c28]">
+              Find Your Next Social
+            </span>
+          </div>
 
           <div className="flex items-center gap-4 bg-[#fcf8f2] p-2 rounded-lg border-4 border-[#362c28] shadow-[4px_4px_0_0_#362c28]">
             <button onClick={prevMonth} className="px-4 py-2 bg-[#e8a56f] text-[#362c28] border-2 border-[#362c28] font-black rounded hover:bg-[#d4735e] hover:text-[#fcf8f2] text-xs transition-colors shadow-[2px_2px_0_0_#362c28] active:translate-y-1 active:translate-x-1 active:shadow-none">
@@ -152,6 +154,11 @@ export default function App() {
                 <img
                   src={selectedEvent.ImageUrl}
                   alt={selectedEvent.Title}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/default-image.jpg';
+                  }}
                   className="w-full h-auto block object-cover sepia-[0.2] contrast-105"
                 />
               </div>
@@ -161,7 +168,12 @@ export default function App() {
               <div className="flex flex-col gap-3 mt-4 font-bold text-sm bg-[#ebdcc5]/60 p-4 border-2 border-[#362c28] rounded-lg shadow-[inset_2px_2px_0_0_#362c28]">
                 <div className="flex items-start gap-3 text-[#362c28]">
                   <span className="text-xl leading-none mt-0.5">⏰</span>
-                  <span className="leading-tight">{selectedEvent.Date} | {selectedEvent.Time}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#362c28] text-[#e8a56f] px-2 py-0.5 rounded-sm border-2 border-[#362c28] font-black uppercase text-xs shadow-[2px_2px_0_0_rgba(0,0,0,0.2)]">
+                      {selectedEvent.Date}
+                    </span>
+                    <span className="font-bold text-sm">{selectedEvent.Time}</span>
+                  </div>
                 </div>
 
                 <div className="flex items-start gap-3 text-[#362c28]">
