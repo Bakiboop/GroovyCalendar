@@ -20,7 +20,7 @@ export default function App() {
     }
   }, [selectedEvent]);
 
-  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΓΙΑ ΤΟ ΗΜΕΡΟΛΟΓΙΟ (Αλλαγή Μήνα) ---
+  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΓΙΑ ΤΟ ΗΜΕΡΟΛΟΓΙΟ ---
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 120;
@@ -33,15 +33,19 @@ export default function App() {
   const onTouchEndHandler = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
+
+    // Καθαρισμός για να μην "κολλήσει"
+    setTouchStart(null);
+    setTouchEnd(null);
+
     if (distance > minSwipeDistance) nextMonth();
     if (distance < -minSwipeDistance) prevMonth();
   };
-  // ---------------------------------------------------------
 
   // --- ΛΟΓΙΚΗ: SWIPE ΠΑΝΩ ΣΤΟ EVENT ΚΑΡΤΕΛΑΚΙ ---
   const [eventTouchStart, setEventTouchStart] = useState(null);
   const [eventTouchEnd, setEventTouchEnd] = useState(null);
-  const eventMinSwipeDistance = 50;
+  const eventMinSwipeDistance = 100; // Το αυξήσαμε στο 100 για να μην είναι τόσο ευαίσθητο!
 
   const onEventTouchStart = (e) => {
     setEventTouchEnd(null);
@@ -54,6 +58,10 @@ export default function App() {
     const isLeftSwipe = distance > eventMinSwipeDistance;
     const isRightSwipe = distance < -eventMinSwipeDistance;
 
+    // 🌟 ΚΑΘΑΡΙΣΜΟΣ αμέσως μόλις σηκώσεις το δάχτυλο για να μην κάνει διπλό swipe!
+    setEventTouchStart(null);
+    setEventTouchEnd(null);
+
     if (isLeftSwipe || isRightSwipe) {
       const sortedEvents = [...eventsData].sort((a, b) => {
         if (a.Date !== b.Date) return a.Date.localeCompare(b.Date);
@@ -62,6 +70,7 @@ export default function App() {
 
       const currentIndex = sortedEvents.findIndex(e => e.Title === selectedEvent.Title && e.Date === selectedEvent.Date);
 
+      // Σε πάει στο επόμενο/προηγούμενο ΜΟΝΟ αν όντως υπάρχει, αλλιώς σταματάει
       if (isLeftSwipe && currentIndex >= 0 && currentIndex < sortedEvents.length - 1) {
         setSelectedEvent(sortedEvents[currentIndex + 1]);
       }
@@ -143,6 +152,15 @@ export default function App() {
         .animate-month-change {
           animation: slideFadeIn 0.3s ease-out forwards;
         }
+
+        /* 🌟 ΝΕΟ ANIMATION ΓΙΑ ΤΟ EVENT SWIPE */
+        @keyframes eventPop {
+          0% { opacity: 0.6; transform: scale(0.95) rotate(1deg); }
+          100% { opacity: 1; transform: scale(1) rotate(1deg); }
+        }
+        .animate-event-pop {
+          animation: eventPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
       `}</style>
 
       <div className="max-w-6xl mx-auto">
@@ -173,11 +191,10 @@ export default function App() {
           </div>
         </header>
 
-        {/* 🌟 ΕΔΩ ΑΦΑΙΡΕΘΗΚΕ ΤΟ REVERSE: flex-col αντί για flex-col-reverse */}
         <div className="flex flex-col lg:flex-row gap-10">
 
           <div
-            key={currentMonth}
+            key={`calendar-${currentMonth}`}
             className="flex-1 animate-month-change bg-[#fcf8f2] rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] overflow-hidden"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
@@ -197,11 +214,12 @@ export default function App() {
 
           {selectedEvent && (
             <div
+              key={`event-${selectedEvent.Title}-${selectedEvent.Date}`} // 🌟 Αυτό κάνει trigger το νέο animation σε κάθε αλλαγή!
               ref={eventCardRef}
               onTouchStart={onEventTouchStart}
               onTouchMove={onEventTouchMove}
               onTouchEnd={onEventTouchEndHandler}
-              className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit transform rotate-1 transition-transform"
+              className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit transform rotate-1 animate-event-pop"
             >
               <div className="flex items-center gap-3 mb-4 text-[#d4735e] border-b-4 border-[#362c28] pb-4">
                 <span className="text-3xl filter drop-shadow-[2px_2px_0_#362c28]">🎸</span>
@@ -252,13 +270,13 @@ export default function App() {
                   href={selectedEvent.EventUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 text-center py-3 bg-[#d4735e] text-[#fcf8f2] border-2 border-[#362c28] hover:bg-[#bd634e] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase"
+                  className="flex-1 text-center py-3 bg-[#d4735e] text-[#fcf8f2] border-2 border-[#362c28] hover:bg-[#bd634e] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase pointer-events-auto"
                 >
                   Event Link
                 </a>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="py-3 px-4 bg-[#fcf8f2] text-[#362c28] border-2 border-[#362c28] hover:bg-[#ebdcc5] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase"
+                  className="py-3 px-4 bg-[#fcf8f2] text-[#362c28] border-2 border-[#362c28] hover:bg-[#ebdcc5] font-black transition-all text-sm tracking-widest shadow-[4px_4px_0_0_#362c28] rounded-lg active:translate-y-1 active:translate-x-1 active:shadow-none uppercase pointer-events-auto"
                 >
                   Close
                 </button>
