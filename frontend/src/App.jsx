@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 const getFirstDayOfMonth = (month, year) => new Date(year, month - 1, 1).getDay();
@@ -8,11 +8,23 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE (Λιγότερο ευαίσθητο!) ---
+  // Reference για να κάνουμε scroll στην κάρτα του event
+  const eventCardRef = useRef(null);
+
+  // Αυτόματο Scroll όταν ανοίγει ένα event 
+  useEffect(() => {
+    if (selectedEvent && eventCardRef.current) {
+      setTimeout(() => {
+        eventCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedEvent]);
+
+  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΓΙΑ ΤΟ ΗΜΕΡΟΛΟΓΙΟ (Αλλαγή Μήνα) ---
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 120;
 
-  const minSwipeDistance = 120; // Το αυξήσαμε στο 120 για να θέλει κανονικό swipe!
   const onTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
@@ -21,12 +33,44 @@ export default function App() {
   const onTouchEndHandler = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-    if (isLeftSwipe) nextMonth();
-    if (isRightSwipe) prevMonth();
+    if (distance > minSwipeDistance) nextMonth();
+    if (distance < -minSwipeDistance) prevMonth();
   };
-  // ------------------------------------------------
+  // ---------------------------------------------------------
+
+  // --- ΛΟΓΙΚΗ: SWIPE ΠΑΝΩ ΣΤΟ EVENT ΚΑΡΤΕΛΑΚΙ ---
+  const [eventTouchStart, setEventTouchStart] = useState(null);
+  const [eventTouchEnd, setEventTouchEnd] = useState(null);
+  const eventMinSwipeDistance = 50;
+
+  const onEventTouchStart = (e) => {
+    setEventTouchEnd(null);
+    setEventTouchStart(e.targetTouches[0].clientX);
+  };
+  const onEventTouchMove = (e) => setEventTouchEnd(e.targetTouches[0].clientX);
+  const onEventTouchEndHandler = () => {
+    if (!eventTouchStart || !eventTouchEnd || !selectedEvent) return;
+    const distance = eventTouchStart - eventTouchEnd;
+    const isLeftSwipe = distance > eventMinSwipeDistance;
+    const isRightSwipe = distance < -eventMinSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      const sortedEvents = [...eventsData].sort((a, b) => {
+        if (a.Date !== b.Date) return a.Date.localeCompare(b.Date);
+        return (a.Time || "").localeCompare(b.Time || "");
+      });
+
+      const currentIndex = sortedEvents.findIndex(e => e.Title === selectedEvent.Title && e.Date === selectedEvent.Date);
+
+      if (isLeftSwipe && currentIndex >= 0 && currentIndex < sortedEvents.length - 1) {
+        setSelectedEvent(sortedEvents[currentIndex + 1]);
+      }
+      if (isRightSwipe && currentIndex > 0) {
+        setSelectedEvent(sortedEvents[currentIndex - 1]);
+      }
+    }
+  };
+  // ---------------------------------------------------------
 
   useEffect(() => {
     fetch('/events.json')
@@ -103,7 +147,6 @@ export default function App() {
 
       <div className="max-w-6xl mx-auto">
 
-        {/* Το Header επέστρεψε ΕΞΩ από τις στήλες για να πιάνει όλο το πλάτος! (Αφαιρέθηκε το sticky) */}
         <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
           <div className="flex flex-col items-center md:items-start transform -rotate-1">
             <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
@@ -130,7 +173,8 @@ export default function App() {
           </div>
         </header>
 
-        <div className="flex flex-col-reverse lg:flex-row gap-10">
+        {/* 🌟 ΕΔΩ ΑΦΑΙΡΕΘΗΚΕ ΤΟ REVERSE: flex-col αντί για flex-col-reverse */}
+        <div className="flex flex-col lg:flex-row gap-10">
 
           <div
             key={currentMonth}
@@ -152,7 +196,13 @@ export default function App() {
           </div>
 
           {selectedEvent && (
-            <div className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit transform rotate-1 transition-transform">
+            <div
+              ref={eventCardRef}
+              onTouchStart={onEventTouchStart}
+              onTouchMove={onEventTouchMove}
+              onTouchEnd={onEventTouchEndHandler}
+              className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit transform rotate-1 transition-transform"
+            >
               <div className="flex items-center gap-3 mb-4 text-[#d4735e] border-b-4 border-[#362c28] pb-4">
                 <span className="text-3xl filter drop-shadow-[2px_2px_0_#362c28]">🎸</span>
                 <span className="font-black uppercase tracking-wider text-sm text-[#362c28]">
@@ -169,7 +219,7 @@ export default function App() {
                     e.target.onerror = null;
                     e.target.src = '/default-image.jpg';
                   }}
-                  className="w-full h-auto block object-cover sepia-[0.2] contrast-105"
+                  className="w-full h-auto block object-cover sepia-[0.2] contrast-105 pointer-events-none"
                 />
               </div>
 
