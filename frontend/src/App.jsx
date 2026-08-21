@@ -11,7 +11,7 @@ export default function App() {
   // Reference για να κάνουμε scroll στην κάρτα του event
   const eventCardRef = useRef(null);
 
-  // Αυτόματο Scroll όταν ανοίγει ένα event 
+  // Αυτόματο Scroll όταν ανοίγει ένα event (ιδανικό για κινητά)
   useEffect(() => {
     if (selectedEvent && eventCardRef.current) {
       setTimeout(() => {
@@ -20,7 +20,7 @@ export default function App() {
     }
   }, [selectedEvent]);
 
-  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΓΙΑ ΤΟ ΗΜΕΡΟΛΟΓΙΟ ---
+  // --- Η ΛΟΓΙΚΗ ΤΟΥ SWIPE ΓΙΑ ΤΟ ΗΜΕΡΟΛΟΓΙΟ (Αλλαγή Μήνα) ---
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 120;
@@ -34,50 +34,12 @@ export default function App() {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
 
-    // Καθαρισμός για να μην "κολλήσει"
+    // Καθαρισμός
     setTouchStart(null);
     setTouchEnd(null);
 
     if (distance > minSwipeDistance) nextMonth();
     if (distance < -minSwipeDistance) prevMonth();
-  };
-
-  // --- ΛΟΓΙΚΗ: SWIPE ΠΑΝΩ ΣΤΟ EVENT ΚΑΡΤΕΛΑΚΙ ---
-  const [eventTouchStart, setEventTouchStart] = useState(null);
-  const [eventTouchEnd, setEventTouchEnd] = useState(null);
-  const eventMinSwipeDistance = 100; // Το αυξήσαμε στο 100 για να μην είναι τόσο ευαίσθητο!
-
-  const onEventTouchStart = (e) => {
-    setEventTouchEnd(null);
-    setEventTouchStart(e.targetTouches[0].clientX);
-  };
-  const onEventTouchMove = (e) => setEventTouchEnd(e.targetTouches[0].clientX);
-  const onEventTouchEndHandler = () => {
-    if (!eventTouchStart || !eventTouchEnd || !selectedEvent) return;
-    const distance = eventTouchStart - eventTouchEnd;
-    const isLeftSwipe = distance > eventMinSwipeDistance;
-    const isRightSwipe = distance < -eventMinSwipeDistance;
-
-    // 🌟 ΚΑΘΑΡΙΣΜΟΣ αμέσως μόλις σηκώσεις το δάχτυλο για να μην κάνει διπλό swipe!
-    setEventTouchStart(null);
-    setEventTouchEnd(null);
-
-    if (isLeftSwipe || isRightSwipe) {
-      const sortedEvents = [...eventsData].sort((a, b) => {
-        if (a.Date !== b.Date) return a.Date.localeCompare(b.Date);
-        return (a.Time || "").localeCompare(b.Time || "");
-      });
-
-      const currentIndex = sortedEvents.findIndex(e => e.Title === selectedEvent.Title && e.Date === selectedEvent.Date);
-
-      // Σε πάει στο επόμενο/προηγούμενο ΜΟΝΟ αν όντως υπάρχει, αλλιώς σταματάει
-      if (isLeftSwipe && currentIndex >= 0 && currentIndex < sortedEvents.length - 1) {
-        setSelectedEvent(sortedEvents[currentIndex + 1]);
-      }
-      if (isRightSwipe && currentIndex > 0) {
-        setSelectedEvent(sortedEvents[currentIndex - 1]);
-      }
-    }
   };
   // ---------------------------------------------------------
 
@@ -153,7 +115,6 @@ export default function App() {
           animation: slideFadeIn 0.3s ease-out forwards;
         }
 
-        /* 🌟 ΝΕΟ ANIMATION ΓΙΑ ΤΟ EVENT SWIPE */
         @keyframes eventPop {
           0% { opacity: 0.6; transform: scale(0.95) rotate(1deg); }
           100% { opacity: 1; transform: scale(1) rotate(1deg); }
@@ -214,11 +175,9 @@ export default function App() {
 
           {selectedEvent && (
             <div
-              key={`event-${selectedEvent.Title}-${selectedEvent.Date}`} // 🌟 Αυτό κάνει trigger το νέο animation σε κάθε αλλαγή!
+              key={`event-${selectedEvent.Title}-${selectedEvent.Date}`}
               ref={eventCardRef}
-              onTouchStart={onEventTouchStart}
-              onTouchMove={onEventTouchMove}
-              onTouchEnd={onEventTouchEndHandler}
+              /* Αφαιρέσαμε τα onTouch από εδώ! */
               className="lg:w-80 bg-[#fcf8f2] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28] h-fit transform rotate-1 animate-event-pop"
             >
               <div className="flex items-center gap-3 mb-4 text-[#d4735e] border-b-4 border-[#362c28] pb-4">
