@@ -186,6 +186,7 @@ namespace GroovyCalendar.SchoolScrapers
             string lowerText = text.ToLower();
             return lowerText.Contains("party") ||
                    lowerText.Contains("πάρτι") ||
+                   lowerText.Contains("social") ||
                    lowerText.Contains("dj");
         }
 

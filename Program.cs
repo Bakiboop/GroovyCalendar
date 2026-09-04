@@ -51,7 +51,7 @@ namespace GroovyCalendar
             {
                 "groove_inathens", "athenslindyhop", "swing_that_thing_athens",
                 "jumpnjive.gr", "athensbalboa", "jazz_reactor", "hoppers_in_athens",
-                "bluefox_athens", "stompingr", "rollinfoxes", "athens_boogie"
+                "bluefox_athens", "stompingr", "rollinfoxes", "athens_boogie", "steamrollers_rnr"
             };
 
             var allScrapedPosts = new List<(string PostUrl, string Caption, string ImageUrl, string Username)>();

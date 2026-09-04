@@ -127,7 +127,7 @@ export default function App() {
       <div className="max-w-6xl mx-auto">
 
         <header className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8 bg-[#5e9596] p-6 rounded-xl border-4 border-[#362c28] shadow-[8px_8px_0_0_#362c28]">
-          <div className="flex flex-col items-center md:items-start transform -rotate-1">
+          <div className="flex flex-col items-center md:items-start">
             <h1 className="text-4xl md:text-6xl font-black text-[#fcf8f2] tracking-tighter drop-shadow-[3px_3px_0_#362c28]">
               Groovy<span className="text-[#e8a56f]">Calendar</span>
             </h1>

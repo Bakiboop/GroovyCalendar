@@ -26,6 +26,7 @@ namespace GroovyCalendar.SchoolScrapers
             Console.WriteLine("[AI] Sending BATCH request to Gemini for parsing...");
 
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(5);
             string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={apiKey}";
 
             // Χτίζουμε το τεράστιο κείμενο, δίνοντας στο AI και το Username του κάθε post!
@@ -50,7 +51,9 @@ CRITICAL RULES:
 2. The 'Date' key MUST be in the strict format YYYY-MM-DD. Assume the current year is 2026.
 3. 'ImageUrl' MUST be the exact URL provided in the IMAGE field of that post.
 4. 'EventUrl' MUST be the exact URL provided in the URL field of that post.
-5. If you cannot find a piece of information, use 'N/A'.
+5. If you cannot find a piece of information, use 'N/A'.\
+6. If the post has multiple eveents, create a separate object for each event in the JSON array.
+7. Beware, some posts may have then key words (party,social, dj) but they are not reffering to a social dance party, do not include those posts. but if the post is about a welcome event or event to their hub or school, include it.
 
 Here are the posts:
 {sb.ToString()}";
