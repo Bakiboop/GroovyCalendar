@@ -5,7 +5,6 @@ namespace GroovyCalendar.SchoolScrapers
 {
     public class InstagramScraper
     {
-        // ΑΛΛΑΓΗ ΕΔΩ 
         public async Task<List<(string PostUrl, string Caption, string ImageUrl)>> ScrapeLatestPostsAsync(string username, List<string> existingUrls = null)
         {
             {
@@ -19,7 +18,8 @@ namespace GroovyCalendar.SchoolScrapers
                 {
                     //Playright setup
                     using var playwright = await Playwright.CreateAsync();
-                    await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false, SlowMo = 200 });
+                    bool isGitHub = Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+                    await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = isGitHub, SlowMo = 200 });
                     var contextOptions = new BrowserNewContextOptions
                     {
                         UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -40,7 +40,7 @@ namespace GroovyCalendar.SchoolScrapers
                     var page = await context.NewPageAsync();
                     if (!File.Exists(authFile))
                     {
-                        if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+                        if (isGitHub)
                         {
                             throw new Exception("[CRITICAL ERROR] auth.json missing in GitHub Actions! Stopping to prevent infinite hang.");
                         }
