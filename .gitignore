@@ -8,3 +8,10 @@ auth.json
 
 # logs
 scraper_logs.json
+/status.md
+/ISSUES.md
+/.vs/VSWorkspaceState.json
+/.vs/GroovyCalendar.slnx/FileContentIndex/a0675eee-ff5f-4724-a464-f0320ebb6cec.vsidx
+/.vs/slnx.sqlite
+/.vs/slnx.sqlite-journal
+/.vs/GroovyCalendar
